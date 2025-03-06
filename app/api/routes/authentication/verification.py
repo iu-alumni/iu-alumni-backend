@@ -41,7 +41,12 @@ def verify_graduate(
     
     db.commit()
     
-    # Generate access token
-    access_token = create_access_token(data={"sub": user.email})
+    # Generate access token with consistent data structure
+    user_data = {
+        "sub": user.email,
+        "user_id": user.id,
+        "user_type": "alumni"
+    }
+    access_token = create_access_token(data=user_data)
     
     return {"access_token": access_token, "token_type": "bearer"} 
