@@ -14,7 +14,7 @@ import os
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -66,7 +66,6 @@ def get_current_user(
         email: str = payload.get("sub")
         user_type: str = payload.get("user_type")
         
-        print(payload, email, user_type)
         if email is None:
             raise credentials_exception
     except JWTError:
