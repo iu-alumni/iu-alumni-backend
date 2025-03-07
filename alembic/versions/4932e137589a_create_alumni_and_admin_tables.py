@@ -29,9 +29,9 @@ def upgrade() -> None:
     op.create_index(op.f('ix_admins_email'), 'admins', ['email'], unique=True)
     op.create_table('alumni',
     sa.Column('id', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=True),
+    sa.Column('email', sa.String(), nullable=False),
     sa.Column('hashed_password', sa.String(), nullable=True),
-    sa.Column('first_name', sa.String(), nullable=True),
+    sa.Column('first_name', sa.String(), nullable=False),
     sa.Column('last_name', sa.String(), nullable=True),
     sa.Column('graduation_year', sa.Integer(), nullable=True),
     sa.Column('course', sa.Enum('BS_CS', 'MS_CS', 'BS_DS', 'MS_DS', 'BS_RO', 'PHD', 'NONE', name='graduationcourse'), nullable=True),

@@ -1,8 +1,34 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.authentication import router as auth_router
 from app.api.routes.profile import router as profile_router
+from app.models.users import Admin
+from app.core.security import get_password_hash, get_random_token
+from app.core.database import SessionLocal
    
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Create admin user if it doesn't exist
+    db = SessionLocal()
+    try:
+        admin = db.query(Admin).filter(Admin.email == "admin@admin.com").first()
+        if not admin:
+            admin = Admin(
+                id=get_random_token(),
+                email="admin@admin.com",
+                hashed_password=get_password_hash("admin")
+            )
+            db.add(admin)
+            db.commit()
+            print("Initial admin user created with email: admin and password: admin")
+    finally:
+        db.close()
+    
+    yield  # Server is running and handling requests here
+    
+    # Shutdown: Any cleanup code would go here
+
 app = FastAPI(
     title="Alumni API",
     description="API for the IU Alumni platform",
@@ -28,7 +54,8 @@ app = FastAPI(
                 }
             }
         }
-    }
+    },
+    lifespan=lifespan
 )
 
 # CORS configuration

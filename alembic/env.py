@@ -9,7 +9,6 @@ from alembic import context
 
 from app.core.database import Base
 from app.models.users import Alumni, Admin
-from app.models.enums import GraduationCourse
 # import all models here
 # from app.models import some_model
 

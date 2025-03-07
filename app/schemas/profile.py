@@ -1,12 +1,10 @@
 from typing import Optional
 from pydantic import BaseModel
-from app.models.enums import GraduationCourse
 
 class ProfileResponse(BaseModel):
     first_name: str
     last_name: str
-    graduation_year: int
-    course: GraduationCourse
+    graduation_year: str
     location: Optional[str] = None
     biography: Optional[str] = None
     show_location: bool = False
@@ -17,7 +15,7 @@ class ProfileResponse(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    course: Optional[GraduationCourse] = None
+    graduation_year: Optional[str] = None
     location: Optional[str] = None
     biography: Optional[str] = None
     show_location: Optional[bool] = None 

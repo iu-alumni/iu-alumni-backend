@@ -5,7 +5,6 @@ from typing import Optional
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.users import Alumni
-from app.models.enums import GraduationCourse
 from app.schemas.profile import ProfileResponse, ProfileUpdateRequest
 
 router = APIRouter()
@@ -38,8 +37,8 @@ def update_profile(
     if profile_data.last_name is not None:
         current_user.last_name = profile_data.last_name
     
-    if profile_data.course is not None:
-        current_user.course = profile_data.course
+    if profile_data.graduation_year is not None:
+        current_user.graduation_year = profile_data.graduation_year
     
     if profile_data.location is not None:
         current_user.location = profile_data.location
