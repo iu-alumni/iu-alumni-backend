@@ -56,6 +56,7 @@ async def add_participant(
     # Commit changes
     try:
         db.commit()
+        db.refresh(event)
         return {"message": "Successfully joined the event"}
     except Exception as e:
         db.rollback()
