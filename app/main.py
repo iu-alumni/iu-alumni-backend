@@ -13,7 +13,7 @@ async def lifespan(app: FastAPI):
     # Startup: Create admin user if it doesn't exist
     db = SessionLocal()
     try:
-        admin = db.query(Admin).filter(Admin.email == "admin@admin.com").first()
+        admin = db.query(Admin).filter(Admin.email == os.getenv("ADMIN_EMAIL")).first()
         if not admin:
             admin = Admin(
                 id=get_random_token(),
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
             )
             db.add(admin)
             db.commit()
-            print("Initial admin user created with email: admin and password: admin")
+            print("Initial admin user created")
     finally:
         db.close()
     
