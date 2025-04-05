@@ -10,7 +10,7 @@ class Event(BaseModel):
     description: str
     location: str
     datetime: datetime
-    cost: int
+    cost: float
     is_online: bool
     cover: Optional[str] = None
 
@@ -19,7 +19,7 @@ class CreateEventRequest(BaseModel):
     description: str
     location: str
     datetime: datetime
-    cost: int
+    cost: float
     is_online: bool
     cover: Optional[str] = None
 
@@ -31,6 +31,6 @@ class UpdateEventRequest(BaseModel):
     description: Optional[str] = None
     location: Optional[str] = None
     datetime: Optional[datetime] = None
-    cost: Optional[int] = None
+    cost: Optional[float] = None
     is_online: Optional[bool] = None
     cover: Optional[str] = None

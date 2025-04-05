@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ARRAY, ForeignKey
+from sqlalchemy import Column, Float, String, DateTime, Boolean, ARRAY, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
@@ -13,6 +13,6 @@ class Event(Base):
     description = Column(String, nullable=False)
     location = Column(String, nullable=False)
     datetime = Column(DateTime, nullable=False)
-    cost = Column(Integer, nullable=False)
+    cost = Column(Float, nullable=False)
     is_online = Column(Boolean, nullable=False)
     cover = Column(String, nullable=True)
