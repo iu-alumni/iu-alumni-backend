@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 class ProfileResponse(BaseModel):
+    id: str
     first_name: str
     last_name: str
     graduation_year: str
