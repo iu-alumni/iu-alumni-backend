@@ -10,7 +10,7 @@ from typing import List
 from datetime import datetime
 router = APIRouter()
 
-@router.get("/events/participant", response_model=List[EventResponse])
+@router.get("/participant", response_model=List[EventResponse])
 async def list_participant_events(db: Session = Depends(get_db), participant_id: str = Depends(get_current_user)):
     """List all events that the current user is a participant of (not by access token)"""
     current_time = datetime.now()

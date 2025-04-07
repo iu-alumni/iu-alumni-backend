@@ -8,7 +8,7 @@ from app.schemas.user import Alumni as AlumniResponse
 
 router = APIRouter()
 
-@router.get("/events/{event_id}/participants", response_model=List[AlumniResponse])
+@router.get("/{event_id}/participants", response_model=List[AlumniResponse])
 async def list_event_participants(
     event_id: str,
     db: Session = Depends(get_db)

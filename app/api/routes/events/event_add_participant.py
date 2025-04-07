@@ -9,7 +9,7 @@ from app.core.security import get_current_user
 
 router = APIRouter()
 
-@router.post("/events/{event_id}/participants", status_code=status.HTTP_200_OK)
+@router.post("/{event_id}/participants", status_code=status.HTTP_200_OK)
 async def add_participant(
     event_id: str, 
     participant_id: str | None = None, 

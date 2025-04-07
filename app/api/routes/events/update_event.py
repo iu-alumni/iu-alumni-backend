@@ -12,7 +12,7 @@ from app.schemas.event import UpdateEventRequest, Event as EventResponse
 
 router = APIRouter()
 
-@router.put("/events/{event_id}", response_model=EventResponse)
+@router.put("/{event_id}", response_model=EventResponse)
 async def update_event(
     event_id: str,
     event_data: UpdateEventRequest,

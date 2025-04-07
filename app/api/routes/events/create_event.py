@@ -9,7 +9,7 @@ from app.core.security import get_current_user, get_random_token
 
 router = APIRouter()
 
-@router.post("/events", response_model=CreateEventResponse)
+@router.post("/", response_model=CreateEventResponse)
 async def create_event(
     event: CreateEventRequest,
     db: Session = Depends(get_db),

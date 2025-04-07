@@ -10,7 +10,7 @@ from typing import List
 from datetime import datetime
 router = APIRouter()
 
-@router.get("/events/owner", response_model=List[EventResponse])
+@router.get("/owner", response_model=List[EventResponse])
 async def list_owner_events(db: Session = Depends(get_db), current_user: Union[Admin, Alumni] = Depends(get_current_user)):
     """List all events owned by the current user (by access token)"""
     current_time = datetime.now()
