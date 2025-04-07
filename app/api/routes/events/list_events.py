@@ -7,7 +7,7 @@ from app.models.events import Event
 from datetime import datetime
 router = APIRouter()
 
-@router.get("/events", response_model=List[EventResponse])
+@router.get("/", response_model=List[EventResponse])
 async def list_events(db: Session = Depends(get_db)):
     """List all events"""
     current_time = datetime.now()

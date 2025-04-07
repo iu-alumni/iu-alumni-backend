@@ -9,7 +9,7 @@ from app.core.security import get_current_user
 
 router = APIRouter()
 
-@router.delete("/events/{event_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{event_id}", status_code=status.HTTP_200_OK)
 async def delete_event(
     event_id: str, 
     db: Session = Depends(get_db),
