@@ -14,9 +14,7 @@ def get_profiles(
     """
     Get the list of all profiles.
     """
-    print("PRE HELLO")
     users = db.query(Alumni).all()
-    print("HELLO")
     if not users:
         raise HTTPException(status_code=404, detail="No users found")
     return users
