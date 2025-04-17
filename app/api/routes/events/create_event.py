@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.events import Event
@@ -15,6 +15,9 @@ async def create_event(
     db: Session = Depends(get_db),
     current_user: Union[Admin, Alumni] = Depends(get_current_user)
 ):
+    if isinstance(current_user, Admin):
+        raise HTTPException(status_code=403, detail="Admins cannot create events")
+
     """Create a new event"""
     new_event = Event(
         id=get_random_token(),

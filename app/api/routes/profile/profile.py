@@ -17,7 +17,8 @@ def get_profile(
     """
     Get the current user's profile information.
     """
-    
+    if not isinstance(current_user, Alumni):
+        raise HTTPException(status_code=403, detail="Your account is not an alumni account")
     return current_user
 
 @router.put("/me", response_model=ProfileResponse)
@@ -29,7 +30,8 @@ def update_profile(
     """
     Update the current user's profile information.
     """
-
+    if not isinstance(current_user, Alumni):
+        raise HTTPException(status_code=403, detail="Your account is not an alumni account")
     # Update fields if provided
     if profile_data.first_name is not None:
         current_user.first_name = profile_data.first_name
