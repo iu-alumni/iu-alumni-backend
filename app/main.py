@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.authentication import router as auth_router
 from app.api.routes.profile import router as profile_router
 from app.api.routes.events import router as events_router
+from app.api.routes.admin import router as admin_router
 from app.models.users import Admin
 from app.core.security import get_password_hash, get_random_token
 from app.core.database import SessionLocal
@@ -71,3 +72,4 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(profile_router, prefix="/profile", tags=["Profile"])
 app.include_router(events_router, prefix="/events", tags=["Events"])
+app.include_router(admin_router, prefix="/admin", tags=["Admin"])
