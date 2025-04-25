@@ -10,5 +10,5 @@ router = APIRouter()
 @router.get("/", response_model=List[EventResponse])
 async def list_events(db: Session = Depends(get_db)):
     """List all events"""
-    events = db.query(Event).order_by(Event.datetime.desc()).all()
+    events = db.query(Event).filter(Event.approved == True).order_by(Event.datetime.desc()).all()
     return events

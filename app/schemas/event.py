@@ -14,6 +14,7 @@ class Event(BaseModel):
     cost: float
     is_online: bool
     cover: Optional[str] = None
+    approved: Optional[bool] = None
 
 class CreateEventRequest(BaseModel):
     title: str
