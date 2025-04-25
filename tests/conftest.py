@@ -7,7 +7,6 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.core.database import Base, get_db
 from app.models.users import Admin, Alumni
-from app.models.events import Event
 from app.core.security import get_password_hash, get_random_token
 
 # Test database URL - use a separate PostgreSQL database for testing
