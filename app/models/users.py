@@ -13,6 +13,8 @@ class Alumni(Base):
     location = Column(String)
     biography = Column(String)
     show_location = Column(Boolean, default=False)
+    telegram_alias = Column(String)
+    avatar = Column(String)
     is_verified = Column(Boolean, default=False)
     is_banned = Column(Boolean, default=False)
 
