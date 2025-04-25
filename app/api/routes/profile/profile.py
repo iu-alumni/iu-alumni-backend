@@ -51,6 +51,12 @@ def update_profile(
     if profile_data.biography is not None:
         current_user.biography = profile_data.biography
     
+    if profile_data.telegram_alias is not None:
+        current_user.telegram_alias = profile_data.telegram_alias
+    
+    if profile_data.avatar is not None:
+        current_user.avatar = profile_data.avatar
+    
     db.commit()
     db.refresh(current_user)
     
