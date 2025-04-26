@@ -6,8 +6,9 @@ from app.api.routes.events import (
     list_owner_events,
     list_participant_events,
     event_add_participant,
+    event_remove_participant,
     list_event_participants,
-    update_event
+    update_event,
 )
 
 router = APIRouter()
@@ -19,5 +20,6 @@ router.include_router(delete_event.router)
 router.include_router(list_owner_events.router)
 router.include_router(list_participant_events.router)
 router.include_router(event_add_participant.router)
+router.include_router(event_remove_participant.router)
 router.include_router(list_event_participants.router)
 router.include_router(update_event.router)
