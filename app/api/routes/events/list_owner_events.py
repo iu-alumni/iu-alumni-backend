@@ -13,6 +13,5 @@ router = APIRouter()
 @router.get("/owner", response_model=List[EventResponse])
 async def list_owner_events(db: Session = Depends(get_db), current_user: Union[Admin, Alumni] = Depends(get_current_user)):
     """List all events owned by the current user (by access token)"""
-    current_time = datetime.now()
-    events = db.query(Event).filter(Event.owner_id == current_user.id).filter(Event.datetime >= current_time).order_by(Event.datetime.asc()).all()
+    events = db.query(Event).filter(Event.approved is not None).filter(Event.owner_id == current_user.id).order_by(Event.datetime.desc()).all()
     return events

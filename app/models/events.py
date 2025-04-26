@@ -14,3 +14,4 @@ class Event(Base):
     cost = Column(Float, nullable=False)
     is_online = Column(Boolean, nullable=False)
     cover = Column(String, nullable=True)
+    approved = Column(Boolean, nullable=True, default=None)
