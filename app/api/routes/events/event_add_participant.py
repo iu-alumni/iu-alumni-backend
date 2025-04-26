@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Union
+from sqlalchemy import inspect
+from sqlalchemy.orm import attributes
 
 from app.core.database import get_db
 from app.models.events import Event
@@ -50,9 +52,10 @@ async def add_participant(
             detail="You are already a participant in this event"
         )
     
-    # Add participant ID to the list
-    event.participants_ids.append(participant_id)
-    
+    new_participants_ids = event.participants_ids + [participant_id]
+
+    event.participants_ids = new_participants_ids
+ 
     # Commit changes
     try:
         db.commit()
