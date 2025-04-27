@@ -29,7 +29,8 @@ async def create_event(
         datetime=event.datetime,
         cost=event.cost,
         is_online=event.is_online,
-        cover=event.cover
+        cover=event.cover,
+        approved=True # TODO: Add a global flag for automatic approval
     )
     db.add(new_event)
     db.commit()
