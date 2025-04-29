@@ -6,6 +6,7 @@ from app.models.users import Admin, Alumni
 from app.schemas.event import CreateEventRequest, CreateEventResponse
 from typing import Union
 from app.core.security import get_current_user, get_random_token
+from app.services.settings import get_event_settings
 
 router = APIRouter()
 
@@ -19,6 +20,9 @@ async def create_event(
         raise HTTPException(status_code=403, detail="Admins cannot create events")
 
     """Create a new event"""
+    settings = get_event_settings(db)
+    auto_approve = settings.get("auto_approve", True)
+    
     new_event = Event(
         id=get_random_token(),
         owner_id=current_user.id,
@@ -30,7 +34,7 @@ async def create_event(
         cost=event.cost,
         is_online=event.is_online,
         cover=event.cover,
-        approved=True # TODO: Add a global flag for automatic approval
+        approved= True if auto_approve else None
     )
     db.add(new_event)
     db.commit()
