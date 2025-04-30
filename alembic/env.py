@@ -10,6 +10,7 @@ from alembic import context
 from app.core.database import Base
 from app.models.users import Alumni, Admin
 from app.models.events import Event
+from app.models.settings import Setting
 # import all models here
 # from app.models import some_model
 
