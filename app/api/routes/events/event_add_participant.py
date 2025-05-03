@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.models.events import Event
 from app.models.users import Admin, Alumni
 from app.core.security import get_current_user
+from app.api.routes.utils.notifications import notify_join_event
 
 router = APIRouter()
 
@@ -63,6 +64,18 @@ async def add_participant(
     try:
         db.commit()
         db.refresh(event)
+        
+        # Get the event owner for notification
+        owner = db.query(Alumni).filter(Alumni.id == event.owner_id).first()
+        
+        # Send notification if both owner and participant have telegram aliases
+        if owner and owner.telegram_alias and participant.telegram_alias:
+            notify_join_event(
+                event_name=event.title,
+                owner_alias=owner.telegram_alias,
+                user_alias=participant.telegram_alias
+            )
+            
         return {"message": "Successfully joined the event"}
     except Exception as e:
         db.rollback()
