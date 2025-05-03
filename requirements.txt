@@ -10,3 +10,4 @@ python-jose[cryptography]>=3.3.0
 pandas>=2.0.0
 openpyxl>=3.1.0  # For Excel support in pandas
 python-multipart>=0.0.5  # Required for handling form data and file uploads
+requests>=2.32.3
