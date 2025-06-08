@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: iu_alumni_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-iu_alumni_db}
+      POSTGRES_USER: ${POSTGRES_USER:-alumni_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alumni_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-alumni_user} -d ${POSTGRES_DB:-iu_alumni_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: iu_alumni_app
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER:-alumni_user}:${POSTGRES_PASSWORD:-alumni_password}@postgres:5432/${POSTGRES_DB:-iu_alumni_db}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-this-in-production}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+      "
+
+volumes:
+  postgres_data:
+    external: true 
