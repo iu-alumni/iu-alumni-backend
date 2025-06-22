@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, String, Enum, Integer
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 class Alumni(Base):
@@ -17,6 +18,9 @@ class Alumni(Base):
     avatar = Column(String)
     is_verified = Column(Boolean, default=False)
     is_banned = Column(Boolean, default=False)
+    
+    # Relationship
+    email_verification = relationship("EmailVerification", back_populates="alumni", uselist=False)
 
 class Admin(Base):
     __tablename__ = "admins"
