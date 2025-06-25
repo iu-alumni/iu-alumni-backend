@@ -2,7 +2,6 @@ from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import EmailStr
 from typing import List
 import os
-from pathlib import Path
 
 # Email configuration
 conf = ConnectionConfig(
@@ -15,8 +14,7 @@ conf = ConnectionConfig(
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True,
-    TEMPLATE_FOLDER=Path(__file__).parent.parent / "templates" / "email"
+    VALIDATE_CERTS=True
 )
 
 # Initialize FastMail instance
