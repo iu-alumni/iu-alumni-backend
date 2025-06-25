@@ -59,8 +59,6 @@ async def register(
             notify_admin_manual_verification,
             new_user.email,
             f"{new_user.first_name} {new_user.last_name}",
-            new_user.graduation_year,
-            new_user.telegram_alias
         )
         
         # Also send email notifications to admins as backup

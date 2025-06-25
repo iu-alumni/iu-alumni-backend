@@ -30,27 +30,20 @@ def notify_join_event(event_name, owner_alias, user_alias):
         logger.error(f"Failed to send join notification: {str(e)}")
         # Don't raise exception to avoid breaking the main flow if notification fails
 
-def notify_admin_manual_verification(user_email: str, user_name: str, 
-                                   graduation_year: str, telegram_alias: str = None):
+def notify_admin_manual_verification(user_email: str, user_name: str):
     """
     Notify admins about manual verification request via Telegram
     
     Args:
         user_email (str): Email of the user requesting verification
         user_name (str): Full name of the user
-        graduation_year (str): Graduation year
-        telegram_alias (str): Optional telegram alias of the user
     """
     message = f"""🔔 Manual Verification Request
 
 Name: {user_name}
 Email: {user_email}
-Graduation Year: {graduation_year}
-Telegram: @{telegram_alias if telegram_alias else 'Not provided'}
 
-To verify this user:
-POST /admin/verify
-{{"email": "{user_email}"}}"""
+You can verify this account via the admin dashboard."""
     
     try:
         url = f"{BASE_URL}/notifyAdmins"
