@@ -11,6 +11,7 @@ from app.core.database import Base
 from app.models.users import Alumni, Admin
 from app.models.events import Event
 from app.models.settings import Setting
+from app.models.email_verification import EmailVerification
 # import all models here
 # from app.models import some_model
 
