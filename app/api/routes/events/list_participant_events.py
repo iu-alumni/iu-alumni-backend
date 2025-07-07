@@ -14,10 +14,20 @@ router = APIRouter()
 async def list_participant_events(
     participant_id: str, 
     db: Session = Depends(get_db),
-    type: Optional[str] = Query(None, description="Filter events by time: 'past' or 'upcoming'")
+    type: Optional[str] = Query(None, description="Filter events by time: 'past' or 'upcoming'"),
+    includeCreated: Optional[bool] = Query(False, description="Include events created by the user")
 ):
     """List all events that the current user is a participant of (not by access token)"""
-    query = db.query(Event).filter(Event.approved == True).filter(Event.participants_ids.any(participant_id))
+    # Base query for events where user is a participant
+    participant_query = db.query(Event).filter(Event.approved == True).filter(Event.participants_ids.any(participant_id))
+    
+    if includeCreated:
+        # Query for events created by the user
+        created_query = db.query(Event).filter(Event.approved == True).filter(Event.owner_id == participant_id)
+        # Combine both queries using union
+        query = participant_query.union(created_query)
+    else:
+        query = participant_query
     
     # Apply time filter if type parameter is provided
     if type == "past":
