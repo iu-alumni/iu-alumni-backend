@@ -30,8 +30,9 @@ class RegisterRequest(BaseModel):
     
     @field_validator('email')
     def validate_innopolis_email(cls, v):
-        if not v.endswith('@innopolis.university'):
-            raise ValueError('Email must be an Innopolis University email (@innopolis.university)')
+        allowed_domains = ['@innopolis.university', '@innopolis.ru']
+        if not any(v.endswith(domain) for domain in allowed_domains):
+            raise ValueError('Email must be an Innopolis email (@innopolis.university or @innopolis.ru)')
         return v
     
     @field_validator('telegram_alias')
@@ -56,6 +57,7 @@ class ResendVerificationRequest(BaseModel):
     
     @field_validator('email')
     def validate_innopolis_email(cls, v):
-        if not v.endswith('@innopolis.university'):
-            raise ValueError('Email must be an Innopolis University email (@innopolis.university)')
+        allowed_domains = ['@innopolis.university', '@innopolis.ru']
+        if not any(v.endswith(domain) for domain in allowed_domains):
+            raise ValueError('Email must be an Innopolis email (@innopolis.university or @innopolis.ru)')
         return v
