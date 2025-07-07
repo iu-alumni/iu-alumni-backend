@@ -6,6 +6,7 @@ from app.models.users import Alumni, Admin
 from app.schemas.auth import RegisterRequest
 from app.services.email_service import send_verification_email, send_manual_verification_notification
 from app.services.verification_service import create_verification_record
+from app.services.email_hash_service import is_email_allowed
 from app.api.routes.utils.notifications import notify_admin_manual_verification
 import os
 
@@ -45,15 +46,32 @@ async def register(
     db.commit()
     db.refresh(new_user)
     
+    # Check if email is in the allowed list
+    print(f"Checking if email {request.email} is in the allowed list")
+    email_allowed = is_email_allowed(db, request.email)
+    
+    # If email is in the allowed list, auto-verify the user
+    if email_allowed:
+        print(f"Email {request.email} is in the allowed list, auto-verifying user")
+        new_user.is_verified = True
+        db.commit()
+        print(f"User {request.email} has been automatically verified")
+        return {
+            "message": "Registration successful. Your account has been automatically verified.",
+            "email": new_user.email
+        }
+    
     # Create verification record
     print(f"Creating verification record for {new_user.email}")
     verification = create_verification_record(
         db=db,
         alumni_id=new_user.id,
-        manual_verification=request.manual_verification
+        manual_verification=request.manual_verification or not email_allowed
     )
     print(f"Verification record created: {verification}")
-    if request.manual_verification:
+    
+    # For emails not in the allowed list, require manual verification
+    if request.manual_verification or not email_allowed:
         # Send Telegram notification to admins
         background_tasks.add_task(
             notify_admin_manual_verification,
