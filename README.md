@@ -32,6 +32,12 @@ SQLALCHEMY_DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 SECRET_KEY=your-secret-key
 ADMIN_EMAIL=example@example.com
 ADMIN_PASSWORD=example1234
+MAIL_USERNAME=mail@example.com
+MAIL_PASSWORD=example example example
+MAIL_PORT=111
+MAIL_SERVER=example.com
+MAIL_USERNAME=name@example.com
+PORT=80
 ```
 
 ## Running the Application
