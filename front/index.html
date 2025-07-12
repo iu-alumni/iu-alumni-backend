@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IU Alumni Backend Tester</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>IU Alumni Backend Tester</h1>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="auth">Authentication</button>
+        <button class="tab-btn" data-tab="profile">Profile</button>
+        <button class="tab-btn" data-tab="events">Events</button>
+        <button class="tab-btn" data-tab="admin">Admin</button>
+      </div>
+
+      <div class="tab-content">
+        <!-- Authentication Tab -->
+        <div class="tab-pane active" id="auth">
+          <div class="auth-section">
+            <h2>Login</h2>
+            <form id="login-form">
+              <div class="form-group">
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" required />
+              </div>
+              <div class="form-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" required />
+              </div>
+              <button type="submit" class="btn">Login</button>
+            </form>
+          </div>
+
+          <div class="auth-section">
+            <h2>Register</h2>
+            <p class="info-text">
+              <strong>Registration Process:</strong><br />
+              • Use @innopolis.university or @innopolis.ru email<br />
+              • <strong>Case 1:</strong> Email in graduates list + "Get Code" →
+              receive verification code<br />
+              • <strong>Case 2:</strong> Email in graduates list + "Manual
+              Verification" → admin verifies manually<br />
+              • <strong>Case 3:</strong> Email NOT in graduates list → admin
+              verifies manually (regardless of choice)<br />
+              • If you get a code but can't access email, you can request manual
+              verification later
+            </p>
+            <form id="register-form">
+              <div class="form-group">
+                <label for="register-email">Email:</label>
+                <input type="email" id="register-email" required />
+              </div>
+              <div class="form-group">
+                <label for="register-password">Password:</label>
+                <input type="password" id="register-password" required />
+              </div>
+              <div class="form-group">
+                <label for="register-first-name">First Name:</label>
+                <input type="text" id="register-first-name" required />
+              </div>
+              <div class="form-group">
+                <label for="register-last-name">Last Name:</label>
+                <input type="text" id="register-last-name" required />
+              </div>
+              <div class="form-group">
+                <label for="register-graduation-year">Graduation Year:</label>
+                <input type="text" id="register-graduation-year" required />
+              </div>
+              <div class="form-group">
+                <label for="register-telegram">Telegram:</label>
+                <input type="text" id="register-telegram" required />
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="manual-verification" />
+                  Request Manual Verification (check if you don't have access to
+                  your email)
+                </label>
+              </div>
+              <button type="submit" class="btn">Register</button>
+            </form>
+          </div>
+
+          <div class="auth-section">
+            <h2>Verify Email</h2>
+            <form id="verify-email-form">
+              <div class="form-group">
+                <label for="verify-email">Email:</label>
+                <input type="email" id="verify-email" required />
+              </div>
+              <div class="form-group">
+                <label for="verification-code">Verification Code:</label>
+                <input
+                  type="text"
+                  id="verification-code"
+                  pattern="[0-9]{6}"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn">Verify Email</button>
+            </form>
+          </div>
+
+          <div class="auth-section">
+            <h2>Resend Verification</h2>
+            <form id="resend-verification-form">
+              <div class="form-group">
+                <label for="resend-email">Email:</label>
+                <input type="email" id="resend-email" required />
+              </div>
+              <button type="submit" class="btn">Resend Verification</button>
+            </form>
+          </div>
+
+          <div class="auth-section">
+            <h2>Request Manual Verification</h2>
+            <p class="info-text">
+              Use this if you registered and received a verification code but
+              don't have access to your email.
+            </p>
+            <form id="request-manual-verification-form">
+              <div class="form-group">
+                <label for="manual-request-email">Email:</label>
+                <input type="email" id="manual-request-email" required />
+              </div>
+              <button type="submit" class="btn btn-warning">
+                Request Manual Verification
+              </button>
+            </form>
+          </div>
+
+          <div class="auth-section">
+            <h2>Verify Graduate</h2>
+            <form id="verify-graduate-form">
+              <div class="form-group">
+                <label for="graduate-email">Email:</label>
+                <input type="email" id="graduate-email" required />
+              </div>
+              <div class="form-group">
+                <label for="graduate-password">Password:</label>
+                <input type="password" id="graduate-password" required />
+              </div>
+              <div class="form-group">
+                <label for="graduate-year">Graduation Year:</label>
+                <input type="text" id="graduate-year" required />
+              </div>
+              <div class="form-group">
+                <label for="graduate-first-name">First Name:</label>
+                <input type="text" id="graduate-first-name" required />
+              </div>
+              <button type="submit" class="btn">Verify Graduate</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div class="tab-pane" id="profile">
+          <div class="profile-section">
+            <h2>Get My Profile</h2>
+            <button id="get-profile-btn" class="btn">Get Profile</button>
+          </div>
+
+          <div class="profile-section">
+            <h2>Update Profile</h2>
+            <form id="update-profile-form">
+              <div class="form-group">
+                <label for="update-first-name">First Name:</label>
+                <input type="text" id="update-first-name" />
+              </div>
+              <div class="form-group">
+                <label for="update-last-name">Last Name:</label>
+                <input type="text" id="update-last-name" />
+              </div>
+              <div class="form-group">
+                <label for="update-graduation-year">Graduation Year:</label>
+                <input type="text" id="update-graduation-year" />
+              </div>
+              <div class="form-group">
+                <label for="update-location">Location:</label>
+                <input type="text" id="update-location" />
+              </div>
+              <div class="form-group">
+                <label for="update-biography">Biography:</label>
+                <textarea id="update-biography" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="update-telegram">Telegram:</label>
+                <input type="text" id="update-telegram" />
+              </div>
+              <div class="form-group">
+                <label for="update-avatar">Avatar URL:</label>
+                <input type="text" id="update-avatar" />
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="show-location" />
+                  Show Location
+                </label>
+              </div>
+              <button type="submit" class="btn">Update Profile</button>
+            </form>
+          </div>
+
+          <div class="profile-section">
+            <h2>Get All Profiles</h2>
+            <button id="get-all-profiles-btn" class="btn">
+              Get All Profiles
+            </button>
+          </div>
+
+          <div class="profile-section">
+            <h2>Get Profile by ID</h2>
+            <form id="get-profile-by-id-form">
+              <div class="form-group">
+                <label for="profile-user-id">User ID:</label>
+                <input type="text" id="profile-user-id" required />
+              </div>
+              <button type="submit" class="btn">Get Profile</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Events Tab -->
+        <div class="tab-pane" id="events">
+          <div class="event-section">
+            <h2>Create Event</h2>
+            <form id="create-event-form">
+              <div class="form-group">
+                <label for="event-title">Title:</label>
+                <input type="text" id="event-title" required />
+              </div>
+              <div class="form-group">
+                <label for="event-description">Description:</label>
+                <textarea id="event-description" rows="3" required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="event-location">Location:</label>
+                <input type="text" id="event-location" required />
+              </div>
+              <div class="form-group">
+                <label for="event-datetime">Date & Time:</label>
+                <input type="datetime-local" id="event-datetime" required />
+              </div>
+              <div class="form-group">
+                <label for="event-cost">Cost:</label>
+                <input
+                  type="number"
+                  id="event-cost"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="event-cover">Cover URL:</label>
+                <input type="text" id="event-cover" />
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="event-is-online" />
+                  Online Event
+                </label>
+              </div>
+              <button type="submit" class="btn">Create Event</button>
+            </form>
+          </div>
+
+          <div class="event-section">
+            <h2>List Events</h2>
+            <button id="list-events-btn" class="btn">List All Events</button>
+          </div>
+
+          <div class="event-section">
+            <h2>List My Events</h2>
+            <button id="list-owner-events-btn" class="btn">
+              List My Events
+            </button>
+          </div>
+
+          <div class="event-section">
+            <h2>List My Participations</h2>
+            <button id="list-participant-events-btn" class="btn">
+              List My Participations
+            </button>
+          </div>
+
+          <div class="event-section">
+            <h2>Update Event</h2>
+            <form id="update-event-form">
+              <div class="form-group">
+                <label for="update-event-id">Event ID:</label>
+                <input type="text" id="update-event-id" required />
+              </div>
+              <div class="form-group">
+                <label for="update-event-title">Title:</label>
+                <input type="text" id="update-event-title" />
+              </div>
+              <div class="form-group">
+                <label for="update-event-description">Description:</label>
+                <textarea id="update-event-description" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="update-event-location">Location:</label>
+                <input type="text" id="update-event-location" />
+              </div>
+              <div class="form-group">
+                <label for="update-event-datetime">Date & Time:</label>
+                <input type="datetime-local" id="update-event-datetime" />
+              </div>
+              <div class="form-group">
+                <label for="update-event-cost">Cost:</label>
+                <input
+                  type="number"
+                  id="update-event-cost"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+              <div class="form-group">
+                <label for="update-event-cover">Cover URL:</label>
+                <input type="text" id="update-event-cover" />
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="update-event-is-online" />
+                  Online Event
+                </label>
+              </div>
+              <button type="submit" class="btn">Update Event</button>
+            </form>
+          </div>
+
+          <div class="event-section">
+            <h2>Delete Event</h2>
+            <form id="delete-event-form">
+              <div class="form-group">
+                <label for="delete-event-id">Event ID:</label>
+                <input type="text" id="delete-event-id" required />
+              </div>
+              <button type="submit" class="btn btn-danger">Delete Event</button>
+            </form>
+          </div>
+
+          <div class="event-section">
+            <h2>Join Event</h2>
+            <form id="join-event-form">
+              <div class="form-group">
+                <label for="join-event-id">Event ID:</label>
+                <input type="text" id="join-event-id" required />
+              </div>
+              <button type="submit" class="btn">Join Event</button>
+            </form>
+          </div>
+
+          <div class="event-section">
+            <h2>Leave Event</h2>
+            <form id="leave-event-form">
+              <div class="form-group">
+                <label for="leave-event-id">Event ID:</label>
+                <input type="text" id="leave-event-id" required />
+              </div>
+              <button type="submit" class="btn btn-warning">Leave Event</button>
+            </form>
+          </div>
+
+          <div class="event-section">
+            <h2>List Event Participants</h2>
+            <form id="list-participants-form">
+              <div class="form-group">
+                <label for="participants-event-id">Event ID:</label>
+                <input type="text" id="participants-event-id" required />
+              </div>
+              <button type="submit" class="btn">List Participants</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div class="tab-pane" id="admin">
+          <div class="admin-section">
+            <h2>Upload Allowed Emails</h2>
+            <p>
+              Upload an Excel file with email addresses in the first column:
+            </p>
+            <form id="upload-emails-form">
+              <div class="form-group">
+                <input
+                  type="file"
+                  id="excel-file"
+                  accept=".xlsx, .xls"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn">Upload</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>Import Alumni</h2>
+            <p>Upload an Excel file with alumni data:</p>
+            <form id="import-alumni-form">
+              <div class="form-group">
+                <input
+                  type="file"
+                  id="alumni-file"
+                  accept=".xlsx, .xls"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn">Import Alumni</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>Add Admin</h2>
+            <form id="add-admin-form">
+              <div class="form-group">
+                <label for="admin-email">Email:</label>
+                <input type="email" id="admin-email" required />
+              </div>
+              <div class="form-group">
+                <label for="admin-password">Password:</label>
+                <input type="password" id="admin-password" required />
+              </div>
+              <button type="submit" class="btn">Add Admin</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>List Users</h2>
+            <button id="list-users-btn" class="btn">List All Users</button>
+          </div>
+
+          <div class="admin-section">
+            <h2>List Banned Users</h2>
+            <button id="list-banned-btn" class="btn">List Banned Users</button>
+          </div>
+
+          <div class="admin-section">
+            <h2>Verify User</h2>
+            <form id="admin-verify-form">
+              <div class="form-group">
+                <label for="verify-user-email">Email:</label>
+                <input type="email" id="verify-user-email" required />
+              </div>
+              <button type="submit" class="btn">Verify User</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>Unverify User</h2>
+            <form id="admin-unverify-form">
+              <div class="form-group">
+                <label for="unverify-user-email">Email:</label>
+                <input type="email" id="unverify-user-email" required />
+              </div>
+              <button type="submit" class="btn btn-warning">
+                Unverify User
+              </button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>Ban User</h2>
+            <form id="ban-user-form">
+              <div class="form-group">
+                <label for="ban-user-email">Email:</label>
+                <input type="email" id="ban-user-email" required />
+              </div>
+              <button type="submit" class="btn btn-danger">Ban User</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>Unban User</h2>
+            <form id="unban-user-form">
+              <div class="form-group">
+                <label for="unban-user-email">Email:</label>
+                <input type="email" id="unban-user-email" required />
+              </div>
+              <button type="submit" class="btn">Unban User</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>List All Events (Admin)</h2>
+            <button id="admin-list-events-btn" class="btn">
+              List All Events
+            </button>
+          </div>
+
+          <div class="admin-section">
+            <h2>Approve Event</h2>
+            <form id="approve-event-form">
+              <div class="form-group">
+                <label for="approve-event-id">Event ID:</label>
+                <input type="text" id="approve-event-id" required />
+              </div>
+              <button type="submit" class="btn">Approve Event</button>
+            </form>
+          </div>
+
+          <div class="admin-section">
+            <h2>Decline Event</h2>
+            <form id="decline-event-form">
+              <div class="form-group">
+                <label for="decline-event-id">Event ID:</label>
+                <input type="text" id="decline-event-id" required />
+              </div>
+              <button type="submit" class="btn btn-danger">
+                Decline Event
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-container">
+        <h2>Results</h2>
+        <div id="results" class="results">
+          <p>API responses will appear here...</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

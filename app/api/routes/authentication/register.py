@@ -6,6 +6,7 @@ from app.models.users import Alumni, Admin
 from app.schemas.auth import RegisterRequest
 from app.services.email_service import send_verification_email, send_manual_verification_notification
 from app.services.verification_service import create_verification_record
+from app.services.email_hash_service import is_email_allowed
 from app.api.routes.utils.notifications import notify_admin_manual_verification
 import os
 
@@ -18,7 +19,19 @@ async def register(
     db: Session = Depends(get_db)
 ):
     """
-    Register a new alumni user with email verification
+    Register a new alumni user with email verification.
+    
+    Logic:
+    Case 1 - Email is in allowed list:
+    - If manual_verification=False: send verification code to email
+    - If manual_verification=True: request manual verification from admin
+    
+    Case 2 - Email is NOT in allowed list:
+    - Regardless of manual_verification choice: request manual verification from admin
+    - Admin is notified that user is not a graduate (email not in list)
+    - No verification code is sent
+    
+    User must verify email with code OR get admin approval to complete registration
     """
     # Check if email already exists
     existing_user = db.query(Alumni).filter(Alumni.email == request.email).first()
@@ -45,20 +58,69 @@ async def register(
     db.commit()
     db.refresh(new_user)
     
+    # Check if email is in the allowed list
+    print(f"Checking if email {request.email} is in the allowed list")
+    email_allowed = is_email_allowed(db, request.email)
+    
     # Create verification record
     print(f"Creating verification record for {new_user.email}")
     verification = create_verification_record(
         db=db,
         alumni_id=new_user.id,
-        manual_verification=request.manual_verification
+        manual_verification=request.manual_verification or not email_allowed
     )
     print(f"Verification record created: {verification}")
-    if request.manual_verification:
-        # Send Telegram notification to admins
+    
+    # Case 1: Email is in allowed list
+    if email_allowed:
+        if request.manual_verification:
+            # User requested manual verification even though email is allowed
+            print(f"User {request.email} requested manual verification (email is in allowed list)")
+            
+            # Send Telegram notification to admins
+            background_tasks.add_task(
+                notify_admin_manual_verification,
+                new_user.email,
+                f"{new_user.first_name} {new_user.last_name}",
+            )
+            
+            # Also send email notifications to admins as backup
+            admins = db.query(Admin).all()
+            for admin in admins:
+                background_tasks.add_task(
+                    send_manual_verification_notification,
+                    admin.email,
+                    new_user.email,
+                    f"{new_user.first_name} {new_user.last_name}"
+                )
+            
+            return {
+                "message": "Registration successful. Your account is pending manual verification by an administrator.",
+                "email": new_user.email
+            }
+        else:
+            # Send verification code to email
+            print(f"Sending verification email to {new_user.email} (email is in allowed list)")
+            await send_verification_email(
+                new_user.email,
+                new_user.first_name,
+                verification.verification_code
+            )
+            print(f"Verification email sent to {new_user.email}")
+            return {
+                "message": "Registration successful. Please check your email for verification code.",
+                "email": new_user.email
+            }
+    
+    # Case 2: Email is NOT in allowed list
+    else:
+        print(f"Email {request.email} is NOT in allowed list - requesting manual verification")
+        
+        # Send Telegram notification to admins with note about non-graduate status
         background_tasks.add_task(
             notify_admin_manual_verification,
             new_user.email,
-            f"{new_user.first_name} {new_user.last_name}",
+            f"{new_user.first_name} {new_user.last_name} (NOT A GRADUATE - email not in allowed list)",
         )
         
         # Also send email notifications to admins as backup
@@ -68,23 +130,10 @@ async def register(
                 send_manual_verification_notification,
                 admin.email,
                 new_user.email,
-                f"{new_user.first_name} {new_user.last_name}"
+                f"{new_user.first_name} {new_user.last_name} (NOT A GRADUATE - email not in allowed list)"
             )
         
         return {
-            "message": "Registration successful. Your account is pending manual verification by an administrator.",
-            "email": new_user.email
-        }
-    else:
-        # Send verification email
-        print(f"Sending verification email to {new_user.email}")
-        await send_verification_email(
-            new_user.email,
-            new_user.first_name,
-            verification.verification_code
-        )
-        print(f"Verification email sent to {new_user.email}")
-        return {
-            "message": "Registration successful. Please check your email for verification code.",
+            "message": "Registration successful. Your email is not in our graduates list. Your account is pending manual verification by an administrator.",
             "email": new_user.email
         }
