@@ -15,7 +15,8 @@ async def list_participant_events(
     participant_id: str, 
     db: Session = Depends(get_db),
     type: Optional[str] = Query(None, description="Filter events by time: 'past' or 'upcoming'"),
-    includeCreated: Optional[bool] = Query(False, description="Include events created by the user")
+    includeCreated: Optional[bool] = Query(False, description="Include events created by the user"),
+    current_user: Union[Alumni, Admin] = Depends(get_current_user)
 ):
     """List all events that the current user is a participant of (not by access token)"""
     # Base query for events where user is a participant

@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.api.routes.events import (
     create_event,
     list_events,
+    get_event,
     delete_event,
     list_owner_events,
     list_participant_events,
@@ -16,6 +17,7 @@ router = APIRouter()
 # Include the sub-routers
 router.include_router(create_event.router)
 router.include_router(list_events.router)
+router.include_router(get_event.router)
 router.include_router(delete_event.router)
 router.include_router(list_owner_events.router)
 router.include_router(list_participant_events.router)
