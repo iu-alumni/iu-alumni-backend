@@ -10,6 +10,8 @@ class Alumni(BaseModel):
     graduation_year: str
     location: str | None = None
     biography: str | None = None
+    avatar: str | None = None
+    telegram_alias: str | None = None
     show_location: bool
     is_verified: bool
     is_banned: bool

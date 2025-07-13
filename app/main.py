@@ -5,10 +5,12 @@ from app.api.routes.authentication import router as auth_router
 from app.api.routes.profile import router as profile_router
 from app.api.routes.events import router as events_router
 from app.api.routes.admin import router as admin_router
+from app.api.routes.cities import router as cities_router
 from app.models.users import Admin
 from app.core.security import get_password_hash, get_random_token
 from app.core.database import SessionLocal
 import os
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create admin user if it doesn't exist
@@ -31,10 +33,18 @@ async def lifespan(app: FastAPI):
     
     # Shutdown: Any cleanup code would go here
 
+# Environment-based documentation control
+ENVIRONMENT = os.getenv("ENVIRONMENT", "DEV").upper()
+IS_DEVELOPMENT = ENVIRONMENT == "DEV"
+
 app = FastAPI(
     title="Alumni API",
     description="API for the IU Alumni platform",
     version="1.0.0",
+    # Enable docs only in development
+    docs_url="/docs" if IS_DEVELOPMENT else None,
+    redoc_url="/redoc" if IS_DEVELOPMENT else None,
+    openapi_url="/openapi.json" if IS_DEVELOPMENT else None,
     openapi_tags=[
         {
             "name": "Authentication",
@@ -73,3 +83,4 @@ app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(profile_router, prefix="/profile", tags=["Profile"])
 app.include_router(events_router, prefix="/events", tags=["Events"])
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
+app.include_router(cities_router, prefix="/cities", tags=["Cities"])

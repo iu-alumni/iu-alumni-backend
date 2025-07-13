@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Union
 
 from app.core.database import get_db
-from app.models.users import Alumni
+from app.models.users import Alumni, Admin
 from app.schemas.profile import ProfileResponse
+from app.core.security import get_current_user
 
 router = APIRouter()
 
 @router.get("/all", response_model=list[ProfileResponse])
 def get_profiles(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Union[Alumni, Admin] = Depends(get_current_user)
 ):
     """
     Get the list of all profiles.

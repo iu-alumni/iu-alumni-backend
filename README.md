@@ -33,11 +33,14 @@ SECRET_KEY=your-secret-key
 ADMIN_EMAIL=example@example.com
 ADMIN_PASSWORD=example1234
 MAIL_USERNAME=mail@example.com
-MAIL_PASSWORD=example example example
-MAIL_PORT=111
-MAIL_SERVER=example.com
-MAIL_USERNAME=name@example.com
-PORT=80
+MAIL_PASSWORD=example-password
+MAIL_PORT=587
+MAIL_SERVER=smtp.gmail.com
+MAIL_FROM=noreply@innopolis.university
+MAIL_FROM_NAME=IU Alumni Platform
+EMAIL_HASH_SECRET=your-email-hash-secret
+NOTIFICATION_BOT_URL=your-notification-bot-url
+ENVIRONMENT=DEV
 ```
 
 ## Running the Application

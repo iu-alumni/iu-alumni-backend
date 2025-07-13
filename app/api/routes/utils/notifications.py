@@ -2,6 +2,7 @@ import requests
 import os
 from fastapi import HTTPException
 import logging
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,21 @@ def notify_join_event(event_name, owner_alias, user_alias):
     if not owner_alias or not user_alias:
         logger.warning(f"Missing telegram alias for notification: owner={owner_alias}, user={user_alias}")
         return
+    
+    # Clean telegram aliases (remove @ if present)
+    owner_alias = owner_alias.lstrip('@')
+    user_alias = user_alias.lstrip('@')
+    
+    # Validate telegram aliases contain only allowed characters
+    import re
+    if not re.match(r'^[a-zA-Z0-9_]+$', owner_alias) or not re.match(r'^[a-zA-Z0-9_]+$', user_alias):
+        logger.error(f"Invalid telegram alias format: owner={owner_alias}, user={user_alias}")
+        return
         
     try:
-        url = f"{BASE_URL}/notifyJoin/{event_name}/{owner_alias}/{user_alias}/"
+        # URL encode the event name to handle special characters
+        encoded_event_name = quote(event_name, safe='')
+        url = f"{BASE_URL}/notifyJoin/{encoded_event_name}/{owner_alias}/{user_alias}/"
         response = requests.post(url, timeout=TIMEOUT)
         response.raise_for_status()
         logger.info(f"Successfully sent join notification for event '{event_name}'")

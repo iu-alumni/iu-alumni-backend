@@ -18,8 +18,10 @@ async def approve_event(event_id: str, db: Session = Depends(get_db), current_us
 
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    if event.approved is not None:
-        raise HTTPException(status_code=400, detail="Event already approved")
+    
+    # Allow changing approval status even if already set
+    if event.approved == True:
+        raise HTTPException(status_code=400, detail="Event is already approved")
     
     event.approved = True
     db.commit()
