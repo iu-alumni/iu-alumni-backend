@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
+
 
 class Alumni(BaseModel):
     id: str

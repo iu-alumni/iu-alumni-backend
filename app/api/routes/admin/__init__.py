@@ -1,5 +1,20 @@
 from fastapi import APIRouter
-from app.api.routes.admin import ban, unban, list_banned, list_all_events, approve_event, decline_event, unapprove_event, settings, verify_user, unverify_user, list_users, upload_allowed_emails
+
+from app.api.routes.admin import (
+    approve_event,
+    ban,
+    decline_event,
+    list_all_events,
+    list_banned,
+    list_users,
+    settings,
+    unapprove_event,
+    unban,
+    unverify_user,
+    upload_allowed_emails,
+    verify_user,
+)
+
 
 router = APIRouter()
 

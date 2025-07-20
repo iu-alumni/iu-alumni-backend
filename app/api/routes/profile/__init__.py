@@ -1,5 +1,7 @@
 from fastapi import APIRouter
-from app.api.routes.profile import profile, get_other_profile, get_profiles
+
+from app.api.routes.profile import get_other_profile, get_profiles, profile
+
 
 router = APIRouter()
 

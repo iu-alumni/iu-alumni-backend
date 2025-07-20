@@ -1,6 +1,6 @@
 import http.server
 import socketserver
-import os
+
 
 # Порт для HTTP-сервера
 PORT = 8000

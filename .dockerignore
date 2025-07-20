@@ -22,4 +22,4 @@ coverage.xml
 .DS_Store
 .mypy_cache
 .pytest_cache
-.hypothesis 
+.hypothesis
