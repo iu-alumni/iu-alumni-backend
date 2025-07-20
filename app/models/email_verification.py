@@ -1,6 +1,8 @@
-from sqlalchemy import Boolean, Column, String, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
+
 
 class EmailVerification(Base):
     __tablename__ = "email_verifications"
@@ -12,6 +14,6 @@ class EmailVerification(Base):
     verification_requested_at = Column(DateTime, nullable=False)
     manual_verification_requested = Column(Boolean, default=False)
     verified_at = Column(DateTime, nullable=True)
-    
+
     # Relationship - using string reference to avoid circular imports
     alumni = relationship("Alumni", back_populates="email_verification")

@@ -1,21 +1,20 @@
 from logging.config import fileConfig
-from dotenv import load_dotenv
 import os
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-
 from app.core.database import Base
-from app.models.users import Alumni, Admin
-from app.models.events import Event
-from app.models.settings import Setting
-from app.models.email_verification import EmailVerification
+
+# Import all models here for autogenerate support
 from app.models.allowed_emails import AllowedEmail
 from app.models.cities import City
-# import all models here
-# from app.models import some_model
+from app.models.email_verification import EmailVerification
+from app.models.events import Event
+from app.models.settings import Setting
+from app.models.users import Admin, Alumni
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -28,18 +27,12 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 load_dotenv()
 
 config.set_main_option("sqlalchemy.url", os.getenv("SQLALCHEMY_DATABASE_URL"))
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -79,9 +72,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

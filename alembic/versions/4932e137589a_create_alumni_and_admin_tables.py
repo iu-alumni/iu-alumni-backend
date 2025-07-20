@@ -1,7 +1,7 @@
 """create alumni and admin tables
 
 Revision ID: 4932e137589a
-Revises: 
+Revises:
 Create Date: 2025-03-06 23:35:14.604162
 
 """

@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column('value', JSONB(), nullable=False),
         sa.PrimaryKeyConstraint('key')
     )
-    
+
     # Insert default auto_approve setting
     op.execute(
         "INSERT INTO settings (key, value) VALUES ('event_settings', '{\"auto_approve\": true}'::jsonb)"

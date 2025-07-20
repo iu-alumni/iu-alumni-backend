@@ -1,15 +1,23 @@
 from contextlib import asynccontextmanager
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes.authentication import router as auth_router
-from app.api.routes.profile import router as profile_router
-from app.api.routes.events import router as events_router
+
 from app.api.routes.admin import router as admin_router
+from app.api.routes.authentication import router as auth_router
 from app.api.routes.cities import router as cities_router
-from app.models.users import Admin
-from app.core.security import get_password_hash, get_random_token
+from app.api.routes.events import router as events_router
+from app.api.routes.profile import router as profile_router
 from app.core.database import SessionLocal
-import os
+from app.core.logging import app_logger, setup_logging
+from app.core.security import get_password_hash, get_random_token
+from app.models.users import Admin
+
+
+# Initialize logging
+setup_logging()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,17 +29,20 @@ async def lifespan(app: FastAPI):
             admin = Admin(
                 id=get_random_token(),
                 email=os.getenv("ADMIN_EMAIL"),
-                hashed_password=get_password_hash(os.getenv("ADMIN_PASSWORD"))
+                hashed_password=get_password_hash(os.getenv("ADMIN_PASSWORD")),
             )
             db.add(admin)
             db.commit()
-            print("Initial admin user created")
+            app_logger.info("Initial admin user created")
+        else:
+            app_logger.debug("Admin user already exists")
     finally:
         db.close()
-    
+
     yield  # Server is running and handling requests here
-    
+
     # Shutdown: Any cleanup code would go here
+
 
 # Environment-based documentation control
 ENVIRONMENT = os.getenv("ENVIRONMENT", "DEV").upper()
@@ -62,12 +73,12 @@ app = FastAPI(
                     "type": "http",
                     "scheme": "bearer",
                     "bearerFormat": "JWT",
-                    "description": "Enter JWT token"
+                    "description": "Enter JWT token",
                 }
             }
         }
     },
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS configuration

@@ -1,5 +1,7 @@
-from sqlalchemy import Column, String, Float, Index
+from sqlalchemy import Column, Float, Index, String
+
 from app.core.database import Base
+
 
 class City(Base):
     __tablename__ = "cities"
@@ -9,9 +11,9 @@ class City(Base):
     country = Column(String, primary_key=True, nullable=False)
     lat = Column(Float, nullable=False)
     lng = Column(Float, nullable=False)
-    
+
     # Create indexes for better search performance
     __table_args__ = (
-        Index('idx_city_name', 'city'),
-        Index('idx_country', 'country'),
+        Index("idx_city_name", "city"),
+        Index("idx_country", "country"),
     )

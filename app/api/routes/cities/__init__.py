@@ -1,5 +1,7 @@
 from fastapi import APIRouter
+
 from app.api.routes.cities import search_cities
+
 
 router = APIRouter()
 
