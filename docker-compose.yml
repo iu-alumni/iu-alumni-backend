@@ -43,6 +43,28 @@ services:
         - action: rebuild
           path: .
 
+  scheduler:
+    build: .
+    container_name: iu_alumni_scheduler
+    profiles: ["scheduler"]
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER:-alumni_user}:${POSTGRES_PASSWORD:-alumni_password}@postgres:5432/${POSTGRES_DB:-iu_alumni_db}
+      NOTIFICATION_BOT_URL: ${NOTIFICATION_BOT_URL:-https://alumap-notification-bot.netlify.app/.netlify/functions}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    command: >
+      sh -c "
+        while true; do
+          echo 'Running event reminders check at' $$(date);
+          python scripts/send_event_reminders.py;
+          sleep 3600;
+        done
+      "
+
 volumes:
   postgres_data:
     external: true

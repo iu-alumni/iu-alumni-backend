@@ -1,0 +1,2 @@
+# Event reminder cron job - runs every hour
+0 * * * * cd /app && python scripts/send_event_reminders.py >> /app/logs/reminders.log 2>&1
