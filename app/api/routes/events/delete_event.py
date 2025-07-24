@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.routes.utils.notifications import notify_event_deleted
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.events import Event
@@ -33,6 +34,30 @@ async def delete_event(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to delete this event",
         )
+
+    # Send notifications before deletion if event is approved
+    if event.approved:
+        event_datetime_str = event.datetime.strftime("%Y-%m-%d %H:%M")
+
+        # Get event owner
+        owner = db.query(Alumni).filter(Alumni.id == event.owner_id).first()
+
+        # Get all users to notify (participants + owner)
+        users_to_notify = (
+            set(event.participants_ids) if event.participants_ids else set()
+        )
+        if owner:
+            users_to_notify.add(owner.id)
+
+        # Send notifications to all users
+        for user_id in users_to_notify:
+            user = db.query(Alumni).filter(Alumni.id == user_id).first()
+            if user and user.telegram_alias:
+                notify_event_deleted(
+                    event_name=event.title,
+                    user_alias=user.telegram_alias,
+                    event_datetime=event_datetime_str,
+                )
 
     # Delete the event
     db.query(Event).filter(Event.id == event_id).delete()

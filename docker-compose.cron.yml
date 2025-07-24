@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  cron:
+    build: .
+    container_name: iu_alumni_cron
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER:-alumni_user}:${POSTGRES_PASSWORD:-alumni_password}@postgres:5432/${POSTGRES_DB:-iu_alumni_db}
+      NOTIFICATION_BOT_URL: ${NOTIFICATION_BOT_URL:-https://alumap-notification-bot.netlify.app/.netlify/functions}
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+      - ./cron/crontab:/etc/cron.d/event-reminders
+    command: >
+      sh -c "
+        apt-get update && apt-get install -y cron &&
+        chmod 0644 /etc/cron.d/event-reminders &&
+        crontab /etc/cron.d/event-reminders &&
+        cron -f
+      "
