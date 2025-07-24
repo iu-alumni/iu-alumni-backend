@@ -68,6 +68,7 @@ async def request_manual_verification(
         notify_admin_manual_verification,
         user.email,
         f"{user.first_name} {user.last_name} (REQUESTED MANUAL VERIFICATION - no email access)",
+        user.telegram_alias,
     )
 
     # Also send email notifications to admins as backup

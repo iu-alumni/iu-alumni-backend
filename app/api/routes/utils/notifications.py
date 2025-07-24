@@ -56,18 +56,34 @@ def notify_join_event(event_name, owner_alias, user_alias):
         # Don't raise exception to avoid breaking the main flow if notification fails
 
 
-def notify_admin_manual_verification(user_email: str, user_name: str):
+def notify_admin_manual_verification(user_email: str, user_name: str, user_alias: str):
     """
     Notify admins about manual verification request via Telegram
 
     Args:
         user_email (str): Email of the user requesting verification
         user_name (str): Full name of the user
+        user_alias (str): Telegram alias of the user
     """
+    # Clean telegram alias (remove @ if present) and validate if provided
+    if user_alias:
+        user_alias = user_alias.lstrip("@")
+
+        import re
+
+        if not re.match(r"^[a-zA-Z0-9_]+$", user_alias):
+            logger.error(f"Invalid telegram alias format: {user_alias}")
+            user_alias = "Invalid format"
+        else:
+            user_alias = f"@{user_alias}"  # Add @ back for display
+    else:
+        user_alias = "Not provided"
+
     message = f"""🔔 Manual Verification Request
 
 Name: {user_name}
 Email: {user_email}
+Telegram Alias: {user_alias}
 
 You can verify this account via the admin dashboard."""
 
