@@ -118,7 +118,7 @@ The project includes automated database backup scripts that create compressed Po
    crontab -e
 
    # Add this line for daily backup at 2:05 AM
-   5 2 * * * /root/iu-alumni-backend/scripts/backup_database.sh
+   5 2 * * * /path/to/your/project/iu-alumni-backend/scripts/backup_database.sh
    ```
 
 #### Manual Backup
@@ -166,6 +166,3 @@ To run pre-commit hooks manually:
 ```bash
 pre-commit run --all-files
 ```
-```
-
-Perfect! Now it only includes backup information and verification steps, without any restore instructions.
