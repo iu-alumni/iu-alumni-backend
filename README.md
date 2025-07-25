@@ -94,6 +94,69 @@ docker-compose down
 - Swagger Documentation: `http://localhost:8080/docs` (only available when `ENVIRONMENT=DEV`)
 - ReDoc Documentation: `http://localhost:8080/redoc` (only available when `ENVIRONMENT=DEV`)
 
+## Database Backup
+
+### Automated Backups
+
+The project includes automated database backup scripts that create compressed PostgreSQL backups.
+
+#### Setup Automatic Backups
+
+1. **Make backup script executable:**
+   ```bash
+   chmod +x scripts/backup_database.sh
+   ```
+
+2. **Create backup directory:**
+   ```bash
+   mkdir -p backups
+   ```
+
+3. **Set up cron job for daily backups:**
+   ```bash
+   # Edit crontab
+   crontab -e
+
+   # Add this line for daily backup at 2:05 AM
+   5 2 * * * /root/iu-alumni-backend/scripts/backup_database.sh
+   ```
+
+#### Manual Backup
+
+```bash
+# Run backup manually
+./scripts/backup_database.sh
+
+# Check backup files
+ls -la backups/
+```
+
+#### Backup Features
+
+- **Compressed backups** with timestamps
+- **Automatic cleanup** (keeps last 7 days)
+- **Logging** for monitoring
+- **Error handling** and validation
+
+#### Verify Backup Integrity
+
+```bash
+# Check backup file size and content
+ls -lh backups/iu_alumni_db_backup_YYYYMMDD_HHMMSS.sql.gz
+
+# Preview backup content
+gunzip -c backups/iu_alumni_db_backup_YYYYMMDD_HHMMSS.sql.gz | head -20
+
+# Test gzip integrity
+gunzip -t backups/iu_alumni_db_backup_YYYYMMDD_HHMMSS.sql.gz
+```
+
+#### Backup Location
+
+- **Directory:** `backups/`
+- **Format:** `iu_alumni_db_backup_YYYYMMDD_HHMMSS.sql.gz`
+- **Retention:** 7 days (configurable in script)
+
 ## Development
 
 The application runs with hot-reload enabled. Any changes to the code will automatically restart the server.
@@ -103,3 +166,6 @@ To run pre-commit hooks manually:
 ```bash
 pre-commit run --all-files
 ```
+```
+
+Perfect! Now it only includes backup information and verification steps, without any restore instructions.
