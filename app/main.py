@@ -99,4 +99,4 @@ app.include_router(admin_router, prefix="/admin", tags=["Admin"])
 app.include_router(cities_router, prefix="/cities", tags=["Cities"])
 app.include_router(telegram_router, tags=["Telegram"])
 
-Instrumentator(app_name="iu-alumni-backend").instrument(app).expose(app)
+Instrumentator().instrument(app).expose(app)
