@@ -3,6 +3,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.routes.admin import router as admin_router
 from app.api.routes.authentication import router as auth_router
@@ -97,3 +98,5 @@ app.include_router(events_router, prefix="/events", tags=["Events"])
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
 app.include_router(cities_router, prefix="/cities", tags=["Cities"])
 app.include_router(telegram_router, tags=["Telegram"])
+
+Instrumentator(app_name="iu-alumni-backend").instrument(app).expose(app)
