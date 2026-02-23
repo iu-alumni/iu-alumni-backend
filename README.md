@@ -5,7 +5,7 @@ FastAPI service providing the REST API and Telegram bot integration for the IU A
 ## Tech Stack
 
 - **Python 3.11** · **FastAPI 1.0** · **SQLAlchemy** (ORM) · **Alembic** (migrations)
-- **PostgreSQL** · **MinIO** (object storage) · **uv** (package manager)
+- **PostgreSQL** · **uv** (package manager)
 
 ## API
 
