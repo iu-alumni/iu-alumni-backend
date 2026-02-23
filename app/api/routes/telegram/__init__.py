@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.api.routes.telegram import feedback, notifications, webhook
 
+
 router = APIRouter(prefix="/telegram", tags=["telegram"])
 
 # Include all sub-routers

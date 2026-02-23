@@ -1,12 +1,12 @@
 """Service for managing polls and feedback."""
 
 import os
-from typing import List, Dict, Any
+from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.core.logging import app_logger
-from app.models.telegram import Poll, Feedback
+from app.models.telegram import Feedback, Poll
 from app.services.telegram_bot import telegram_service
 
 
@@ -35,7 +35,7 @@ class FeedbackService:
     @staticmethod
     async def send_feedback_polls(db: Session, chat_id: int) -> None:
         """Send all feedback polls to a user.
-        
+
         Args:
             db: Database session
             chat_id: Chat ID to send polls to
@@ -67,16 +67,16 @@ class FeedbackService:
 
     @staticmethod
     def process_poll_answer(
-        db: Session, poll_id: str, option_ids: List[int], alias: str
-    ) -> Dict[str, Any]:
+        db: Session, poll_id: str, option_ids: list[int], alias: str
+    ) -> dict[str, Any]:
         """Process a poll answer from a user.
-        
+
         Args:
             db: Database session
             poll_id: ID of the poll answered
             option_ids: List of option indices selected
             alias: User's Telegram alias
-            
+
         Returns:
             Status dictionary
         """
@@ -107,8 +107,9 @@ class FeedbackService:
             # Send to external webhook if configured
             if os.getenv("FEEDBACK_WEBHOOK_URL"):
                 try:
-                    import httpx
                     import asyncio
+
+                    import httpx
 
                     async def send_webhook():
                         async with httpx.AsyncClient() as client:
@@ -133,12 +134,12 @@ class FeedbackService:
             return {"status": "error", "message": str(e)}
 
     @staticmethod
-    def get_all_feedback(db: Session) -> List[Dict[str, Any]]:
+    def get_all_feedback(db: Session) -> list[dict[str, Any]]:
         """Get all feedback responses.
-        
+
         Args:
             db: Database session
-            
+
         Returns:
             List of feedback records
         """

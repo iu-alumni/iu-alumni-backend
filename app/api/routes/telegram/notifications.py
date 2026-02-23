@@ -4,8 +4,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.telegram import NotifyJoinRequest, NotifyUpcomingRequest, NotifyUserRequest
+from app.schemas.telegram import (
+    NotifyJoinRequest,
+    NotifyUpcomingRequest,
+    NotifyUserRequest,
+)
 from app.services.notification_service import NotificationService
+
 
 router = APIRouter()
 
@@ -16,11 +21,10 @@ async def notify_join(
     db: Session = Depends(get_db),
 ):
     """Send notification when user joins an event.
-    
+
     Args:
-        event_name: Name of the event
-        owner_alias: Telegram alias of event owner
-        user_alias: Telegram alias of user joining
+        request: Request body with event_name, owner_alias, and user_alias
+        db: Database session
     """
     result = await NotificationService.send_join_notification(
         db, request.event_name, request.owner_alias, request.user_alias
@@ -28,8 +32,7 @@ async def notify_join(
 
     if result.get("status") == "ok":
         return {"statusCode": 200, "body": result}
-    else:
-        return {"statusCode": 404, "body": result}
+    return {"statusCode": 404, "body": result}
 
 
 @router.post("/notify/upcoming")
@@ -38,10 +41,10 @@ async def notify_upcoming(
     db: Session = Depends(get_db),
 ):
     """Send reminder notification for upcoming event.
-    
+
     Args:
-        event_name: Name of the event
-        user_alias: Telegram alias of user
+        request: Request body with event_name and user_alias
+        db: Database session
     """
     result = await NotificationService.send_upcoming_reminder(
         db, request.event_name, request.user_alias
@@ -49,8 +52,7 @@ async def notify_upcoming(
 
     if result.get("status") == "ok":
         return {"statusCode": 200, "body": result}
-    else:
-        return {"statusCode": 404, "body": result}
+    return {"statusCode": 404, "body": result}
 
 
 @router.post("/notify/user")
@@ -59,11 +61,10 @@ async def notify_user(
     db: Session = Depends(get_db),
 ):
     """Send custom notification to a user.
-    
+
     Args:
-        user_alias: Telegram alias of user
-        text: Custom text message to send
-        event_name: (optional) Name of related event
+        request: Request body with user_alias, text, and optional event_name
+        db: Database session
     """
     result = await NotificationService.send_custom_notification(
         db, request.user_alias, request.text
@@ -71,5 +72,4 @@ async def notify_user(
 
     if result.get("status") == "ok":
         return {"statusCode": 200, "body": result}
-    else:
-        return {"statusCode": 404, "body": result}
+    return {"statusCode": 404, "body": result}

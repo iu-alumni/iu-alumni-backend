@@ -9,6 +9,7 @@ from app.models.telegram import TelegramUser
 from app.services.feedback_service import FeedbackService
 from app.services.notification_service import NotificationService
 
+
 router = APIRouter()
 
 
@@ -18,7 +19,7 @@ async def telegram_webhook(
     db: Session = Depends(get_db),
 ):
     """Handle incoming Telegram webhook updates.
-    
+
     Handles:
     - /start and /help commands for user registration
     - /launch_app command to show mini app button

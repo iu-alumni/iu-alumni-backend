@@ -13,8 +13,8 @@ from app.models.cities import City
 from app.models.email_verification import EmailVerification
 from app.models.events import Event
 from app.models.settings import Setting
+from app.models.telegram import Feedback, Poll, TelegramUser
 from app.models.users import Admin, Alumni
-from app.models.telegram import TelegramUser, Poll, Feedback
 
 
 # this is the Alembic Config object, which provides

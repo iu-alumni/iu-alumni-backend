@@ -1,7 +1,6 @@
 """Pydantic schemas for Telegram bot interactions."""
 
 from datetime import datetime
-from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -30,7 +29,7 @@ class PollCreate(BaseModel):
 
     poll_id: str
     question: str
-    options: List[str]
+    options: list[str]
 
 
 class PollResponse(BaseModel):
@@ -38,7 +37,7 @@ class PollResponse(BaseModel):
 
     poll_id: str
     question: str
-    options: List[str]
+    options: list[str]
     created_at: datetime
 
     class Config:
@@ -48,7 +47,7 @@ class PollResponse(BaseModel):
 class FeedbackCreate(BaseModel):
     """Schema for creating feedback."""
 
-    alias: Optional[str] = None
+    alias: str | None = None
     question: str
     answer: str
 
@@ -57,7 +56,7 @@ class FeedbackResponse(BaseModel):
     """Schema for feedback response."""
 
     id: int
-    alias: Optional[str] = None
+    alias: str | None = None
     question: str
     answer: str
     created_at: datetime
@@ -68,14 +67,14 @@ class FeedbackResponse(BaseModel):
 
 class TelegramUpdate(BaseModel):
     """Schema for incoming Telegram webhook update.
-    
+
     This is a simplified version of Telegram Update object.
     Only contains the fields we care about.
     """
 
     update_id: int
-    message: Optional[dict] = None
-    poll_answer: Optional[dict] = None
+    message: dict | None = None
+    poll_answer: dict | None = None
 
 
 class NotifyJoinRequest(BaseModel):

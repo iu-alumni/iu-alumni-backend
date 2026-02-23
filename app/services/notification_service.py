@@ -48,14 +48,14 @@ Here's what you can do:
     MINI_APP_URL = "https://iualumni.netlify.app/"
 
     @staticmethod
-    async def send_greeting(db: Session, alias: str, chat_id: int) -> bool:
+    async def send_greeting(_db: Session, alias: str, chat_id: int) -> bool:
         """Send welcome greeting to a new user.
-        
+
         Args:
             db: Database session
             alias: User's Telegram alias
             chat_id: User's Telegram chat ID
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -73,13 +73,13 @@ Here's what you can do:
         db: Session, event_name: str, owner_alias: str, user_alias: str
     ) -> dict:
         """Notify user and owner when user joins event.
-        
+
         Args:
             db: Database session
             event_name: Name of the event
             owner_alias: Owner's Telegram alias
             user_alias: User's Telegram alias
-            
+
         Returns:
             Status dictionary
         """
@@ -128,12 +128,12 @@ Here's what you can do:
         db: Session, event_name: str, user_alias: str
     ) -> dict:
         """Send reminder about upcoming event.
-        
+
         Args:
             db: Database session
             event_name: Name of the event
             user_alias: User's Telegram alias
-            
+
         Returns:
             Status dictionary
         """
@@ -166,12 +166,12 @@ Here's what you can do:
         db: Session, user_alias: str, text: str
     ) -> dict:
         """Send custom message to user.
-        
+
         Args:
             db: Database session
             user_alias: User's Telegram alias
             text: Message text to send
-            
+
         Returns:
             Status dictionary
         """
@@ -202,10 +202,10 @@ Here's what you can do:
     @staticmethod
     async def send_admin_notification(text: str) -> dict:
         """Send notification to admin group.
-        
+
         Args:
             text: Message text to send
-            
+
         Returns:
             Status dictionary
         """
@@ -221,10 +221,10 @@ Here's what you can do:
     @staticmethod
     async def send_mini_app_button(chat_id: int) -> bool:
         """Send mini app button to user.
-        
+
         Args:
             chat_id: User's Telegram chat ID
-            
+
         Returns:
             True if successful, False otherwise
         """

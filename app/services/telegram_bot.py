@@ -1,7 +1,8 @@
 """Telegram Bot API utilities for sending messages and managing bot interactions."""
 
 import os
-from typing import Dict, Any, List
+from typing import Any
+
 import httpx
 
 from app.core.logging import app_logger
@@ -25,15 +26,15 @@ class TelegramBotService:
 
     async def send_message(
         self, chat_id: int, text: str, parse_mode: str = "HTML", **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send a text message to a chat.
-        
+
         Args:
             chat_id: Chat ID to send to
             text: Message text
             parse_mode: Parse mode (HTML or Markdown)
             **kwargs: Additional parameters to pass to Telegram API
-            
+
         Returns:
             Response from Telegram API
         """
@@ -66,19 +67,19 @@ class TelegramBotService:
         self,
         chat_id: int,
         question: str,
-        options: List[str],
+        options: list[str],
         is_anonymous: bool = False,
         allows_multiple_answers: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send a poll to a chat.
-        
+
         Args:
             chat_id: Chat ID to send to
             question: Poll question
             options: List of poll options
             is_anonymous: Whether poll is anonymous
             allows_multiple_answers: Whether multiple answers are allowed
-            
+
         Returns:
             Response from Telegram API with poll data
         """
