@@ -16,13 +16,13 @@ import sys
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from dotenv import load_dotenv  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from app.api.routes.utils.notifications import notify_event_reminder  # noqa: E402
-from app.models.events import Event  # noqa: E402
-from app.models.users import Alumni  # noqa: E402
+from app.api.routes.utils.notifications import notify_event_reminder
+from app.models.events import Event
+from app.models.users import Alumni
 
 
 # Load environment variables

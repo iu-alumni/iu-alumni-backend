@@ -26,7 +26,7 @@ async def resend_verification_code(
     Rate limited to once per 60 seconds
     """
     # Check if user can request a new code
-    can_resend, message, alumni_id = can_resend_verification(db, request.email)
+    can_resend, message, _alumni_id = can_resend_verification(db, request.email)
 
     if not can_resend:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)

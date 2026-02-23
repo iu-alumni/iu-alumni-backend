@@ -49,7 +49,8 @@ services:
     profiles: ["scheduler"]
     environment:
       SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER:-alumni_user}:${POSTGRES_PASSWORD:-alumni_password}@postgres:5432/${POSTGRES_DB:-iu_alumni_db}
-      NOTIFICATION_BOT_URL: ${NOTIFICATION_BOT_URL:-https://alumap-notification-bot.netlify.app/.netlify/functions}
+      # Notification endpoint is now handled by this backend itself
+      NOTIFICATION_BOT_URL: ${NOTIFICATION_BOT_URL:-http://localhost:8080/telegram}
     depends_on:
       postgres:
         condition: service_healthy
