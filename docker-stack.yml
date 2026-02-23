@@ -17,7 +17,7 @@ services:
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/iu-alumni/iu-alumni-backend:latest}
     environment:
-      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${BACKEND_DB:-iu_alumni_db}
+      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${BACKEND_DB:-iu_alumni_db}
       SECRET_KEY: ${SECRET_KEY}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
