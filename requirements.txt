@@ -12,3 +12,4 @@ openpyxl>=3.1.0  # For Excel support in pandas
 python-multipart>=0.0.5  # Required for handling form data and file uploads
 requests
 fastapi-mail>=1.5.0
+httpx>=0.24.0  # For async HTTP requests (Telegram Bot API)
