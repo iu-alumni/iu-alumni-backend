@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
 
 # Environment-based documentation control
 ENVIRONMENT = os.getenv("ENVIRONMENT", "DEV").upper()
-IS_DEVELOPMENT = ENVIRONMENT == "DEV"
+IS_DEVELOPMENT = ENVIRONMENT in ("DEV", "TEST")
 
 app = FastAPI(
     title="Alumni API",
