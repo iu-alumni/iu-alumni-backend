@@ -3,7 +3,6 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.routes.utils.notifications import notify_admin_manual_verification
 from app.core.database import get_db
 from app.core.security import get_password_hash, get_random_token
 from app.models.users import Admin, Alumni
@@ -13,6 +12,7 @@ from app.services.email_service import (
     send_manual_verification_notification,
     send_verification_email,
 )
+from app.services.notification_service import NotificationService
 from app.services.verification_service import create_verification_record
 
 
@@ -90,12 +90,15 @@ async def register(
             )
 
             # Send Telegram notification to admins
-            background_tasks.add_task(
-                notify_admin_manual_verification,
-                new_user.email,
-                f"{new_user.first_name} {new_user.last_name}",
-                new_user.telegram_alias,
+            alias_display = f"@{new_user.telegram_alias.lstrip('@')}" if new_user.telegram_alias else "Not provided"
+            admin_message = (
+                f"🔔 Manual Verification Request\n\n"
+                f"Name: {new_user.first_name} {new_user.last_name}\n"
+                f"Email: {new_user.email}\n"
+                f"Telegram Alias: {alias_display}\n\n"
+                f"You can verify this account via the admin dashboard."
             )
+            background_tasks.add_task(NotificationService.send_admin_notification, admin_message)
 
             # Also send email notifications to admins as backup
             admins = db.query(Admin).all()
@@ -130,12 +133,15 @@ async def register(
     )
 
     # Send Telegram notification to admins with note about non-graduate status
-    background_tasks.add_task(
-        notify_admin_manual_verification,
-        new_user.email,
-        f"{new_user.first_name} {new_user.last_name} (NOT A GRADUATE - email not in allowed list)",
-        new_user.telegram_alias,
+    alias_display = f"@{new_user.telegram_alias.lstrip('@')}" if new_user.telegram_alias else "Not provided"
+    admin_message = (
+        f"🔔 Manual Verification Request\n\n"
+        f"Name: {new_user.first_name} {new_user.last_name} (NOT A GRADUATE - email not in allowed list)\n"
+        f"Email: {new_user.email}\n"
+        f"Telegram Alias: {alias_display}\n\n"
+        f"You can verify this account via the admin dashboard."
     )
+    background_tasks.add_task(NotificationService.send_admin_notification, admin_message)
 
     # Also send email notifications to admins as backup
     admins = db.query(Admin).all()

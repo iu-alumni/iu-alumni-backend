@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.routes.utils.notifications import notify_join_event
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.events import Event
 from app.models.users import Admin, Alumni
+from app.services.notification_service import NotificationService
 
 
 router = APIRouter()
@@ -67,7 +67,8 @@ async def add_participant(
 
         # Send notification if both owner and participant have telegram aliases
         if owner and owner.telegram_alias and participant.telegram_alias:
-            notify_join_event(
+            await NotificationService.send_join_notification(
+                db,
                 event_name=event.title,
                 owner_alias=owner.telegram_alias,
                 user_alias=participant.telegram_alias,

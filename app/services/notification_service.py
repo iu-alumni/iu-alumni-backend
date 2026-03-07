@@ -1,5 +1,7 @@
 """Service for sending various notifications to users."""
 
+import os
+
 from sqlalchemy.orm import Session
 
 from app.core.logging import app_logger
@@ -45,7 +47,7 @@ Here's what you can do:
 🚀 <a href="https://www.rustore.ru/catalog/app/com.innopolis.alumni">Мы есть на RuStore!</a>
 """
 
-    MINI_APP_URL = "https://iualumni.netlify.app/"
+    MINI_APP_URL = os.getenv("MINI_APP_URL", "https://iualumni.netlify.app/")
 
     @staticmethod
     async def send_greeting(_db: Session, alias: str, chat_id: int) -> bool:

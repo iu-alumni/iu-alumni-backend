@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.routes.utils.notifications import notify_event_updated
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.events import Event
 from app.models.users import Admin, Alumni
 from app.schemas.event import Event as EventResponse, UpdateEventRequest
+from app.services.notification_service import NotificationService
 
 
 router = APIRouter()
@@ -92,10 +92,18 @@ async def update_event(
         for user_id in users_to_notify:
             user = db.query(Alumni).filter(Alumni.id == user_id).first()
             if user and user.telegram_alias:
-                notify_event_updated(
-                    event_name=event.title,
-                    user_alias=user.telegram_alias,
-                    changes=changes,
-                )
+                change_lines = []
+                for field, new_value in changes.items():
+                    if field == "datetime":
+                        change_lines.append(f"📅 New time: {new_value}")
+                    elif field == "location":
+                        change_lines.append(f"📍 New location: {new_value}")
+                    elif field == "cost":
+                        change_lines.append(f"💵 New cost: ${new_value}")
+                    elif field == "is_online":
+                        fmt = "Online" if new_value else "In-person"
+                        change_lines.append(f"🌐 Format changed to: {fmt}")
+                message = f"📝 Event '{event.title}' has been updated:\n" + "\n".join(change_lines)
+                await NotificationService.send_custom_notification(db, user.telegram_alias, message)
 
     return event

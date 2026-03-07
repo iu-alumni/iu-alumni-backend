@@ -12,7 +12,7 @@ class TelegramBotService:
     """Service for interacting with Telegram Bot API."""
 
     BASE_URL = "https://api.telegram.org"
-    ADMIN_CHAT_ID = -4725261280  # Hard-coded admin group chat ID
+    ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "-4725261280"))
 
     def __init__(self):
         """Initialize the Telegram bot service with token from environment."""
