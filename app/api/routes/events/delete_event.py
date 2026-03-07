@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.routes.utils.notifications import notify_event_deleted
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.events import Event
 from app.models.users import Admin, Alumni
+from app.services.notification_service import NotificationService
 
 
 router = APIRouter()
@@ -53,11 +53,8 @@ async def delete_event(
         for user_id in users_to_notify:
             user = db.query(Alumni).filter(Alumni.id == user_id).first()
             if user and user.telegram_alias:
-                notify_event_deleted(
-                    event_name=event.title,
-                    user_alias=user.telegram_alias,
-                    event_datetime=event_datetime_str,
-                )
+                message = f"❌ Event '{event.title}' scheduled for {event_datetime_str} has been cancelled."
+                await NotificationService.send_custom_notification(db, user.telegram_alias, message)
 
     # Delete the event
     db.query(Event).filter(Event.id == event_id).delete()

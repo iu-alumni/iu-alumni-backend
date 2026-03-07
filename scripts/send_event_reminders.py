@@ -7,6 +7,7 @@ Example crontab entry:
 0 * * * * cd /path/to/iu-alumni-backend && source venv/bin/activate && python scripts/send_event_reminders.py
 """
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 import os
@@ -20,9 +21,9 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.api.routes.utils.notifications import notify_event_reminder
 from app.models.events import Event
 from app.models.users import Alumni
+from app.services.notification_service import NotificationService
 
 
 # Load environment variables
@@ -48,6 +49,10 @@ def get_db_session():
 
 def send_reminders():
     """Check for events starting in 12 hours and send reminders"""
+    asyncio.run(_send_reminders_async())
+
+
+async def _send_reminders_async():
     db = get_db_session()
 
     try:
@@ -113,14 +118,13 @@ def send_reminders():
                 # Format datetime for display
                 event_datetime_str = event.datetime.strftime("%Y-%m-%d %H:%M UTC")
 
-                # Send the reminder
-                notify_event_reminder(
-                    event_name=event.title,
-                    user_alias=user.telegram_alias,
-                    event_datetime=event_datetime_str,
-                    location=event.location,
-                    is_online=event.is_online,
+                location_text = "Online" if event.is_online else event.location
+                message = (
+                    f"⏰ Reminder: '{event.title}' starts in 12 hours!\n"
+                    f"📅 Time: {event_datetime_str}\n"
+                    f"📍 Location: {location_text}"
                 )
+                await NotificationService.send_custom_notification(db, user.telegram_alias, message)
 
                 logger.info(
                     f"Sent reminder to {user.telegram_alias} for event '{event.title}'"

@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 import os
 
 from fastapi import FastAPI
@@ -15,6 +16,7 @@ from app.core.database import SessionLocal
 from app.core.logging import app_logger, setup_logging
 from app.core.security import get_password_hash, get_random_token
 from app.models.users import Admin
+from app.services.telegram_polling import start_polling
 
 
 # Initialize logging
@@ -41,9 +43,19 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
+    # Start Telegram long-polling in the background
+    stop_polling = asyncio.Event()
+    polling_task = asyncio.create_task(start_polling(stop_polling))
+
     yield  # Server is running and handling requests here
 
-    # Shutdown: Any cleanup code would go here
+    # Shutdown: stop the polling loop gracefully
+    stop_polling.set()
+    polling_task.cancel()
+    try:
+        await polling_task
+    except asyncio.CancelledError:
+        pass
 
 
 # Environment-based documentation control

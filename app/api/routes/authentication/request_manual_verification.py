@@ -3,12 +3,12 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.routes.utils.notifications import notify_admin_manual_verification
 from app.core.database import get_db
 from app.models.email_verification import EmailVerification
 from app.models.users import Admin, Alumni
 from app.schemas.auth import ResendVerificationRequest
 from app.services.email_service import send_manual_verification_notification
+from app.services.notification_service import NotificationService
 
 
 # Get logger for this module
@@ -64,12 +64,15 @@ async def request_manual_verification(
     )
 
     # Send Telegram notification to admins
-    background_tasks.add_task(
-        notify_admin_manual_verification,
-        user.email,
-        f"{user.first_name} {user.last_name} (REQUESTED MANUAL VERIFICATION - no email access)",
-        user.telegram_alias,
+    alias_display = f"@{user.telegram_alias.lstrip('@')}" if user.telegram_alias else "Not provided"
+    admin_message = (
+        f"🔔 Manual Verification Request\n\n"
+        f"Name: {user.first_name} {user.last_name} (REQUESTED MANUAL VERIFICATION - no email access)\n"
+        f"Email: {user.email}\n"
+        f"Telegram Alias: {alias_display}\n\n"
+        f"You can verify this account via the admin dashboard."
     )
+    background_tasks.add_task(NotificationService.send_admin_notification, admin_message)
 
     # Also send email notifications to admins as backup
     admins = db.query(Admin).all()

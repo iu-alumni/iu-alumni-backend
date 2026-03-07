@@ -66,41 +66,8 @@ class FeedbackResponse(BaseModel):
 
 
 class TelegramUpdate(BaseModel):
-    """Schema for incoming Telegram webhook update.
-
-    This is a simplified version of Telegram Update object.
-    Only contains the fields we care about.
-    """
+    """Schema for an incoming Telegram update (used internally by polling)."""
 
     update_id: int
     message: dict | None = None
     poll_answer: dict | None = None
-
-
-class NotifyJoinRequest(BaseModel):
-    """Schema for event join notification request."""
-
-    event_name: str
-    owner_alias: str
-    user_alias: str
-
-
-class NotifyUpcomingRequest(BaseModel):
-    """Schema for upcoming event notification request."""
-
-    event_name: str
-    user_alias: str
-
-
-class NotifyUserRequest(BaseModel):
-    """Schema for custom user notification request."""
-
-    event_name: str
-    user_alias: str
-    text: str
-
-
-class NotifyAdminsRequest(BaseModel):
-    """Schema for admin notification request."""
-
-    text: str
