@@ -15,22 +15,22 @@ version: "3.8"
 
 services:
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/iu-alumni/iu-alumni-backend:latest}
+    image: ${BACKEND_IMAGE}
     environment:
-      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${BACKEND_DB:-iu_alumni_db}
+      SQLALCHEMY_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ENVIRONMENT: ${ENVIRONMENT:-PROD}
+      ENVIRONMENT: ${ENVIRONMENT}
       EMAIL_HASH_SECRET: ${EMAIL_HASH_SECRET}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_SERVER: ${MAIL_SERVER:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_SERVER: ${MAIL_SERVER}
       MAIL_FROM: ${MAIL_FROM}
-      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-IU Alumni}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:--4725261280}
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID}
       MINI_APP_URL: ${MINI_APP_URL}
     networks:
       iu_alumni_network:
