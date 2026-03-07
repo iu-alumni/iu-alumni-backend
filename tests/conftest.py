@@ -6,7 +6,7 @@ time.  Patching ``dotenv.load_dotenv`` here ensures a local ``.env`` file cannot
 override the in-memory SQLite URL used during testing.
 """
 
-import os
+import os  # noqa: I001
 
 # ---------------------------------------------------------------------------
 # 1. Set required environment variables before any app imports
@@ -27,6 +27,6 @@ for _key, _val in _TEST_ENV.items():
 #    database.py does ``from dotenv import load_dotenv`` at import time, so
 #    replacing the function on the module object before that import is enough.
 # ---------------------------------------------------------------------------
-import dotenv  # noqa: E402
+import dotenv  # noqa: E402, I001
 
-dotenv.load_dotenv = lambda *args, **kwargs: None  # type: ignore[assignment]
+dotenv.load_dotenv = lambda **_kwargs: None  # type: ignore[assignment]

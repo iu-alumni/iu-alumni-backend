@@ -20,7 +20,6 @@ from app.services.telegram_bot import telegram_service
 
 async def _handle_update(update: dict[str, Any], db: Session) -> None:
     """Dispatch a single Telegram update to the appropriate handler."""
-
     # Handle poll answers (feedback submission)
     if "poll_answer" in update:
         poll_answer = update["poll_answer"]

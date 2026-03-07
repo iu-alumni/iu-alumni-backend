@@ -1,5 +1,6 @@
-from contextlib import asynccontextmanager
 import asyncio
+import contextlib
+from contextlib import asynccontextmanager
 import os
 
 from fastapi import FastAPI
@@ -52,10 +53,8 @@ async def lifespan(app: FastAPI):
     # Shutdown: stop the polling loop gracefully
     stop_polling.set()
     polling_task.cancel()
-    try:
+    with contextlib.suppress(asyncio.CancelledError):
         await polling_task
-    except asyncio.CancelledError:
-        pass
 
 
 # Environment-based documentation control
