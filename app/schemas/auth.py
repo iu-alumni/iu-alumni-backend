@@ -8,6 +8,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+# Alias — same fields, kept separate for API clarity
+LoginOTPRequest = LoginRequest
+
+
 class LoginInitResponse(BaseModel):
     session_token: str
     message: str

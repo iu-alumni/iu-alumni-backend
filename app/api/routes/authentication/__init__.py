@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.api.routes.authentication import (
     add_admin,
     login,
-    login_verify,
+    login_otp,
     password_reset_confirm,
     password_reset_request,
     register,
@@ -21,7 +21,7 @@ router.include_router(verify.router)
 router.include_router(resend_verification.router)
 router.include_router(request_manual_verification.router)
 router.include_router(login.router)
-router.include_router(login_verify.router)
+router.include_router(login_otp.router)
 router.include_router(password_reset_request.router)
 router.include_router(password_reset_confirm.router)
 router.include_router(add_admin.router)
