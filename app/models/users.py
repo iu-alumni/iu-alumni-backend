@@ -18,8 +18,8 @@ class Alumni(Base):
     show_location = Column(Boolean, default=False)
     telegram_alias = Column(String)
     avatar = Column(String)
-    is_verified = Column(Boolean, default=False)
-    is_banned = Column(Boolean, default=False)
+    is_verified = Column(Boolean, default=False, index=True)
+    is_banned = Column(Boolean, default=False, index=True)
 
     # Relationship
     email_verification = relationship(

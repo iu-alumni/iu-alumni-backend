@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -13,6 +13,8 @@ router = APIRouter()
 
 @router.get("/owner", response_model=list[EventResponse])
 async def list_owner_events(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
     db: Session = Depends(get_db),
     current_user: Admin | Alumni = Depends(get_current_user),
 ):
@@ -22,6 +24,8 @@ async def list_owner_events(
         .filter(Event.approved != None)
         .filter(Event.owner_id == current_user.id)
         .order_by(Event.datetime.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
     return events
@@ -29,6 +33,8 @@ async def list_owner_events(
 
 @router.get("/owner/pending", response_model=list[EventResponse])
 async def list_owner_pending_events(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
     db: Session = Depends(get_db),
     current_user: Admin | Alumni = Depends(get_current_user),
 ):
@@ -38,6 +44,8 @@ async def list_owner_pending_events(
         .filter(Event.approved == None)
         .filter(Event.owner_id == current_user.id)
         .order_by(Event.datetime.desc())
+        .offset(skip)
+        .limit(limit)
         .all()
     )
     return events
