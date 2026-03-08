@@ -8,6 +8,7 @@ from app.api.routes.admin import (
     list_banned,
     list_users,
     settings,
+    test_email,
     unapprove_event,
     unban,
     unverify_user,
@@ -30,3 +31,4 @@ router.include_router(verify_user.router)
 router.include_router(unverify_user.router)
 router.include_router(list_users.router)
 router.include_router(upload_allowed_emails.router)
+router.include_router(test_email.router)
