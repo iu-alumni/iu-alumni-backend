@@ -4,7 +4,7 @@ from app.api.routes.admin import (
     approve_event,
     ban,
     decline_event,
-    email_test,
+    email_diagnostic,
     list_all_events,
     list_banned,
     list_users,
@@ -31,4 +31,4 @@ router.include_router(verify_user.router)
 router.include_router(unverify_user.router)
 router.include_router(list_users.router)
 router.include_router(upload_allowed_emails.router)
-router.include_router(email_test.router)
+router.include_router(email_diagnostic.router)
