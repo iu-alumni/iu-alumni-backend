@@ -19,6 +19,21 @@ class Event(BaseModel):
     approved: bool | None = None
 
 
+class EventListItem(BaseModel):
+    """Slim event schema for list responses — no cover image."""
+
+    id: str
+    owner_id: str
+    participants_ids: list[str]
+    title: str
+    description: str
+    location: str
+    datetime: datetime
+    cost: float
+    is_online: bool
+    approved: bool | None = None
+
+
 class CreateEventRequest(BaseModel):
     title: str
     description: str
