@@ -54,4 +54,4 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
     access_token = create_access_token(data=user_data)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return TokenResponse(access_token=access_token, token_type="bearer")

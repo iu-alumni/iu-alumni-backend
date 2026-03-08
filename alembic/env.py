@@ -12,6 +12,8 @@ from app.models.allowed_emails import AllowedEmail
 from app.models.cities import City
 from app.models.email_verification import EmailVerification
 from app.models.events import Event
+from app.models.login_code import LoginCode
+from app.models.password_reset_token import PasswordResetToken
 from app.models.settings import Setting
 from app.models.telegram import Feedback, Poll, TelegramUser
 from app.models.users import Admin, Alumni

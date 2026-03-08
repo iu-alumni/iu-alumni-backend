@@ -8,9 +8,32 @@ class LoginRequest(BaseModel):
     password: str
 
 
+# Alias — same fields, kept separate for API clarity
+LoginOTPRequest = LoginRequest
+
+
+class LoginInitResponse(BaseModel):
+    session_token: str
+    message: str
+
+
+class LoginVerifyRequest(BaseModel):
+    session_token: str
+    code: str = Field(..., pattern=r"^\d{6}$")
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+
+class PasswordResetRequestSchema(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirmSchema(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
 
 
 class AdminCreateRequest(BaseModel):
