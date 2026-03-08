@@ -17,6 +17,8 @@ from app.services.verification_service import generate_verification_code
 router = APIRouter()
 
 LOGIN_CODE_EXPIRY_MINUTES = int(os.getenv("LOGIN_CODE_EXPIRY_MINUTES", "10"))
+OTP_COOLDOWN_SECONDS = 60
+OTP_MAX_ATTEMPTS = 5
 
 
 @router.post("/login/otp/request", response_model=LoginInitResponse)
@@ -24,7 +26,7 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
     """
     OTP login step 1: validate email + password, then send a 6-digit code to
     the university email. Returns a session_token for use in /login/otp/verify.
-    This is an alternative to the standard /login endpoint.
+    Rate-limited: one code per 60 seconds per account.
     """
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
@@ -48,24 +50,39 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is banned"
         )
 
-    # Invalidate any previous unused codes for this user
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    # Cooldown: reject if a code was issued less than 60 seconds ago
+    recent = (
+        db.query(LoginCode)
+        .filter(LoginCode.alumni_id == user.id, LoginCode.used.is_(False))
+        .order_by(LoginCode.created_at.desc())
+        .first()
+    )
+    if recent and (now - recent.created_at) < timedelta(seconds=OTP_COOLDOWN_SECONDS):
+        seconds_left = OTP_COOLDOWN_SECONDS - int((now - recent.created_at).total_seconds())
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Please wait {seconds_left} seconds before requesting a new code",
+        )
+
+    # Invalidate previous unused codes
     db.query(LoginCode).filter(
         LoginCode.alumni_id == user.id, LoginCode.used.is_(False)
     ).delete()
 
     code = generate_verification_code()
     session_token = str(uuid.uuid4())
-    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(
-        minutes=LOGIN_CODE_EXPIRY_MINUTES
-    )
 
     db.add(LoginCode(
         id=str(uuid.uuid4()),
         alumni_id=user.id,
         session_token=session_token,
         code=code,
-        expires_at=expires_at,
+        expires_at=now + timedelta(minutes=LOGIN_CODE_EXPIRY_MINUTES),
+        created_at=now,
         used=False,
+        attempts=0,
     ))
     db.commit()
 
@@ -85,8 +102,8 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
 @router.post("/login/otp/verify", response_model=TokenResponse)
 def login_otp_verify(request: LoginVerifyRequest, db: Session = Depends(get_db)):
     """
-    OTP login step 2: submit the session_token and 6-digit code received by
-    email. Returns the full JWT on success.
+    OTP login step 2: submit session_token + 6-digit code.
+    Invalidated after 5 wrong attempts or expiry.
     """
     login_code = (
         db.query(LoginCode)
@@ -107,10 +124,21 @@ def login_otp_verify(request: LoginVerifyRequest, db: Session = Depends(get_db))
             detail="Verification code has expired",
         )
 
+    if login_code.attempts >= OTP_MAX_ATTEMPTS:
+        login_code.used = True
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many incorrect attempts. Please request a new code",
+        )
+
     if login_code.code != request.code:
+        login_code.attempts += 1
+        db.commit()
+        remaining = OTP_MAX_ATTEMPTS - login_code.attempts
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect verification code",
+            detail=f"Incorrect verification code. {remaining} attempt(s) remaining",
         )
 
     login_code.used = True

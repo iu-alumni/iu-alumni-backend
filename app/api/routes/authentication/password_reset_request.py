@@ -15,6 +15,7 @@ from app.services.email_service import send_password_reset_email
 router = APIRouter()
 
 PASSWORD_RESET_EXPIRY_MINUTES = int(os.getenv("PASSWORD_RESET_EXPIRY_MINUTES", "30"))
+PASSWORD_RESET_COOLDOWN_SECONDS = 60
 FRONTEND_URL = os.getenv("MINI_APP_URL", "")
 
 
@@ -26,20 +27,34 @@ async def password_reset_request(
 ):
     """
     Request a password reset link. Always returns 200 to prevent email
-    enumeration — the link is sent silently if the email exists.
+    enumeration. Rate-limited to one request per 60 seconds per account.
     """
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
     if user:
-        # Invalidate any existing unused tokens for this user
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        # Cooldown: reject if a token was issued less than 60 seconds ago
+        recent = (
+            db.query(PasswordResetToken)
+            .filter(
+                PasswordResetToken.alumni_id == user.id,
+                PasswordResetToken.used.is_(False),
+            )
+            .order_by(PasswordResetToken.created_at.desc())
+            .first()
+        )
+        if recent and (now - recent.created_at) < timedelta(seconds=PASSWORD_RESET_COOLDOWN_SECONDS):
+            # Still return 200 — don't reveal whether email exists or is rate-limited
+            return {"message": "If that email is registered, a reset link has been sent"}
+
+        # Invalidate any existing unused tokens
         db.query(PasswordResetToken).filter(
             PasswordResetToken.alumni_id == user.id,
             PasswordResetToken.used.is_(False),
         ).delete()
 
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
         token = str(uuid.uuid4())
-
         reset_token = PasswordResetToken(
             id=str(uuid.uuid4()),
             alumni_id=user.id,
@@ -47,6 +62,7 @@ async def password_reset_request(
             expires_at=now + timedelta(minutes=PASSWORD_RESET_EXPIRY_MINUTES),
             used=False,
             created_at=now,
+            attempts=0,
         )
         db.add(reset_token)
         db.commit()

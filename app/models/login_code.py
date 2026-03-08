@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -12,6 +12,8 @@ class LoginCode(Base):
     session_token = Column(String, unique=True, nullable=False)
     code = Column(String, nullable=False)
     expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False, nullable=False)
+    attempts = Column(Integer, default=0, nullable=False)
 
     alumni = relationship("Alumni")
