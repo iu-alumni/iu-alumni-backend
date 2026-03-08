@@ -17,3 +17,21 @@ class Alumni(BaseModel):
     is_banned: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AlumniListItem(BaseModel):
+    """Slim alumni schema for list responses — no avatar image, no hashed_password."""
+
+    id: str
+    email: str
+    first_name: str
+    last_name: str
+    graduation_year: str
+    location: str | None = None
+    biography: str | None = None
+    telegram_alias: str | None = None
+    show_location: bool
+    is_verified: bool
+    is_banned: bool
+
+    model_config = ConfigDict(from_attributes=True)
