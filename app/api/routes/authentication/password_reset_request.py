@@ -1,6 +1,6 @@
+from datetime import datetime, timedelta
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
@@ -25,14 +25,14 @@ async def password_reset_request(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
-    """
-    Request a password reset link. Always returns 200 to prevent email
-    enumeration. Rate-limited to one request per 60 seconds per account.
+    """Request a password reset link. Always returns 200 to prevent email enumeration.
+
+    Rate-limited to one request per 60 seconds per account.
     """
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
     if user:
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(datetime.UTC).replace(tzinfo=None)
 
         # Cooldown: reject if a token was issued less than 60 seconds ago
         recent = (

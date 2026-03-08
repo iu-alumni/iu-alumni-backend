@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -19,8 +19,8 @@ def password_reset_confirm(
     request: PasswordResetConfirmSchema,
     db: Session = Depends(get_db),
 ):
-    """
-    Confirm password reset using the token from the emailed link.
+    """Confirm password reset using the token from the emailed link.
+
     Invalidated after 5 wrong attempts or expiry.
     """
     reset_token = (
@@ -35,7 +35,7 @@ def password_reset_confirm(
             detail="Invalid or already used reset token",
         )
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(datetime.UTC).replace(tzinfo=None)
     if reset_token.expires_at < now:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,6 +1,6 @@
+from datetime import datetime, timedelta
 import os
 import uuid
-from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -9,7 +9,12 @@ from app.core.database import get_db
 from app.core.security import create_access_token, verify_password
 from app.models.login_code import LoginCode
 from app.models.users import Alumni
-from app.schemas.auth import LoginInitResponse, LoginOTPRequest, LoginVerifyRequest, TokenResponse
+from app.schemas.auth import (
+    LoginInitResponse,
+    LoginOTPRequest,
+    LoginVerifyRequest,
+    TokenResponse,
+)
 from app.services.email_service import send_login_code_email
 from app.services.verification_service import generate_verification_code
 
@@ -23,9 +28,9 @@ OTP_MAX_ATTEMPTS = 5
 
 @router.post("/login/otp/request", response_model=LoginInitResponse)
 async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_db)):
-    """
-    OTP login step 1: validate email + password, then send a 6-digit code to
-    the university email. Returns a session_token for use in /login/otp/verify.
+    """OTP login step 1: validate email + password, send a 6-digit code to the university email.
+
+    Returns a session_token for use in /login/otp/verify.
     Rate-limited: one code per 60 seconds per account.
     """
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
@@ -50,7 +55,7 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is banned"
         )
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(datetime.UTC).replace(tzinfo=None)
 
     # Cooldown: reject if a code was issued less than 60 seconds ago
     recent = (
@@ -101,8 +106,8 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
 
 @router.post("/login/otp/verify", response_model=TokenResponse)
 def login_otp_verify(request: LoginVerifyRequest, db: Session = Depends(get_db)):
-    """
-    OTP login step 2: submit session_token + 6-digit code.
+    """OTP login step 2: submit session_token + 6-digit code.
+
     Invalidated after 5 wrong attempts or expiry.
     """
     login_code = (
@@ -117,7 +122,7 @@ def login_otp_verify(request: LoginVerifyRequest, db: Session = Depends(get_db))
             detail="Invalid or expired session",
         )
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(datetime.UTC).replace(tzinfo=None)
     if login_code.expires_at < now:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
