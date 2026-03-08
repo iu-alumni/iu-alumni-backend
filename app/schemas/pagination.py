@@ -1,5 +1,5 @@
-import base64
-import json
+from base64 import b64decode, b64encode
+from json import dumps, loads
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel
@@ -13,8 +13,8 @@ class Paginated(BaseModel, Generic[T]):
 
 
 def encode_cursor(data: dict) -> str:
-    return base64.b64encode(json.dumps(data, default=str).encode()).decode()
+    return b64encode(dumps(data, default=str).encode()).decode()
 
 
 def decode_cursor(cursor: str) -> dict:
-    return json.loads(base64.b64decode(cursor.encode()).decode())
+    return loads(b64decode(cursor.encode()).decode())
