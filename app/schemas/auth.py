@@ -8,8 +8,8 @@ class LoginRequest(BaseModel):
     password: str
 
 
-# Alias — same fields, kept separate for API clarity
-LoginOTPRequest = LoginRequest
+class LoginOTPRequest(BaseModel):
+    email: EmailStr
 
 
 class LoginInitResponse(BaseModel):
