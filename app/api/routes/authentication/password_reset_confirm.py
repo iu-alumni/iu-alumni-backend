@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -35,7 +35,7 @@ def password_reset_confirm(
             detail="Invalid or already used reset token",
         )
 
-    now = datetime.now(datetime.UTC).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     if reset_token.expires_at < now:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

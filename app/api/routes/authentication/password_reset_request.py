@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import os
 import uuid
 
@@ -32,7 +32,7 @@ async def password_reset_request(
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
     if user:
-        now = datetime.now(datetime.UTC).replace(tzinfo=None)
+        now = datetime.now(UTC).replace(tzinfo=None)
 
         # Cooldown: reject if a token was issued less than 60 seconds ago
         recent = (

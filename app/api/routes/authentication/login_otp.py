@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import os
 import uuid
 
@@ -55,7 +55,7 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is banned"
         )
 
-    now = datetime.now(datetime.UTC).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
 
     # Cooldown: reject if a code was issued less than 60 seconds ago
     recent = (
@@ -122,7 +122,7 @@ def login_otp_verify(request: LoginVerifyRequest, db: Session = Depends(get_db))
             detail="Invalid or expired session",
         )
 
-    now = datetime.now(datetime.UTC).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     if login_code.expires_at < now:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
