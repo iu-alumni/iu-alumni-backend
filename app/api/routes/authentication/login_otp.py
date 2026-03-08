@@ -87,12 +87,18 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
     ))
     db.commit()
 
-    await send_login_code_email(
+    email_sent = await send_login_code_email(
         email=user.email,
         first_name=user.first_name,
         code=code,
         expiry_minutes=LOGIN_CODE_EXPIRY_MINUTES,
     )
+
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send login code email. Please try again later.",
+        )
 
     return LoginInitResponse(
         session_token=session_token,
