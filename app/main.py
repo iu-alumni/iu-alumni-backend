@@ -95,16 +95,14 @@ app = FastAPI(
 )
 
 # CORS configuration
-# CORS_ORIGINS is a comma-separated list of allowed origins, e.g.:
-#   CORS_ORIGINS=https://alumap.example.com,https://admin.example.com
-# Wildcards ("*") cannot be used together with allow_credentials=True per
-# the CORS spec, so an explicit origin list is always required in production.
-_raw_origins = os.getenv("CORS_ORIGINS", "")
-_allow_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+# CORS_ORIGINS: comma-separated list of allowed origins.
+# In development falls back to "*" when not set.
+_raw_cors = os.getenv("CORS_ORIGINS", "*" if IS_DEVELOPMENT else "")
+allow_origins = [o.strip() for o in _raw_cors.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allow_origins,
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
