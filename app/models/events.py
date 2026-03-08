@@ -1,4 +1,13 @@
-from sqlalchemy import ARRAY, Boolean, Column, DateTime, Float, ForeignKey, Index, String
+from sqlalchemy import (
+    ARRAY,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+)
 
 from app.core.database import Base
 
