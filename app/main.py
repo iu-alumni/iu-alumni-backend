@@ -95,10 +95,26 @@ app = FastAPI(
 )
 
 # CORS configuration
+# When a DOMAIN is set, allow the known subdomains explicitly (required when
+# allow_credentials=True — browsers reject wildcard + credentials).
+_domain = os.getenv("DOMAIN", "")
+if _domain:
+    _allowed_origins = [
+        f"https://{_domain}",
+        f"https://admin.{_domain}",
+        f"https://mobile.{_domain}",
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:5173",
+    ]
+else:
+    # Local dev fallback — no credentials needed so wildcard is fine
+    _allowed_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_allowed_origins,
+    allow_credentials=bool(_domain),
     allow_methods=["*"],
     allow_headers=["*"],
 )
