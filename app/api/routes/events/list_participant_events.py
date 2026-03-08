@@ -16,6 +16,8 @@ router = APIRouter()
 @router.get("/participant/{participant_id}", response_model=list[EventResponse])
 async def list_participant_events(
     participant_id: str,
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
     db: Session = Depends(get_db),
     type: str | None = Query(
         None, description="Filter events by time: 'past' or 'upcoming'"
@@ -51,5 +53,5 @@ async def list_participant_events(
     elif type == "upcoming":
         query = query.filter(Event.datetime >= datetime.now())
 
-    events = query.order_by(Event.datetime.desc()).all()
+    events = query.order_by(Event.datetime.desc()).offset(skip).limit(limit).all()
     return events

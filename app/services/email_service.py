@@ -8,10 +8,21 @@ from pydantic import EmailStr
 # Get logger for this module
 logger = logging.getLogger("iu_alumni.email_service")
 
+_mail_username = os.getenv("MAIL_USERNAME", "")
+_mail_password = os.getenv("MAIL_PASSWORD", "")
+
+if not _mail_username or not _mail_password:
+    logger.warning(
+        "SMTP credentials are not configured (MAIL_USERNAME and/or MAIL_PASSWORD are empty). "
+        "All email sends will fail. "
+        "If using Gmail/Google Workspace, generate an App Password at "
+        "myaccount.google.com -> Security -> 2-Step Verification -> App Passwords."
+    )
+
 # Email configuration
 conf = ConnectionConfig(
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME", ""),
-    MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", ""),
+    MAIL_USERNAME=_mail_username,
+    MAIL_PASSWORD=_mail_password,
     MAIL_FROM=os.getenv("MAIL_FROM", "noreply@innopolis.university"),
     MAIL_PORT=int(os.getenv("MAIL_PORT", "587")),
     MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
@@ -59,8 +70,8 @@ async def send_login_code_email(
         )
         await fm.send_message(message)
         return True
-    except Exception as e:
-        logger.error(f"Failed to send login code email: {e!s}")
+    except Exception:
+        logger.exception("Failed to send login code email to %s", email)
         return False
 
 
@@ -105,8 +116,8 @@ async def send_password_reset_email(
         )
         await fm.send_message(message)
         return True
-    except Exception as e:
-        logger.error(f"Failed to send password reset email: {e!s}")
+    except Exception:
+        logger.exception("Failed to send password reset email to %s", email)
         return False
 
 
@@ -163,16 +174,12 @@ async def send_verification_email(
             subtype=MessageType.html,
         )
 
-        try:
-            logger.info(f"Sending verification email to {email}")
-            await fm.send_message(message)
-            return True
-        except Exception as e:
-            logger.error(f"Failed to send verification email: {e!s}")
-            return False
+        logger.info(f"Sending verification email to {email}")
+        await fm.send_message(message)
+        return True
 
-    except Exception as e:
-        logger.error(f"Failed to send verification email: {e!s}")
+    except Exception:
+        logger.exception("Failed to send verification email to %s", email)
         return False
 
 
@@ -220,8 +227,8 @@ async def send_manual_verification_notification(
         await fm.send_message(message)
         return True
 
-    except Exception as e:
-        logger.error(f"Failed to send admin notification: {e!s}")
+    except Exception:
+        logger.exception("Failed to send admin notification to %s", admin_email)
         return False
 
 
@@ -271,6 +278,6 @@ async def send_verification_success_email(email: EmailStr, first_name: str) -> b
         await fm.send_message(message)
         return True
 
-    except Exception as e:
-        logger.error(f"Failed to send verification success email: {e!s}")
+    except Exception:
+        logger.exception("Failed to send verification success email to %s", email)
         return False

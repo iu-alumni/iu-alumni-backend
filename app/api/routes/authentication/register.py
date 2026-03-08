@@ -118,9 +118,14 @@ async def register(
         logger.info(
             f"Sending verification email to {new_user.email} (email is in allowed list)"
         )
-        await send_verification_email(
+        email_sent = await send_verification_email(
             new_user.email, new_user.first_name, verification.verification_code
         )
+        if not email_sent:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please try again later.",
+            )
         logger.info(f"Verification email sent to {new_user.email}")
         return {
             "message": "Registration successful. Please check your email for verification code.",
