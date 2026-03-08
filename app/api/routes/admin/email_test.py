@@ -21,7 +21,7 @@ class TestEmailRequest(BaseModel):
 
 
 @router.post("/test-email")
-async def test_email(
+async def send_test_email(
     request: TestEmailRequest,
     db: Session = Depends(get_db),
     current_user: Admin | Alumni = Depends(get_current_user),
