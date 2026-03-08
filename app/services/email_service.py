@@ -26,6 +26,90 @@ conf = ConnectionConfig(
 fm = FastMail(conf)
 
 
+async def send_login_code_email(
+    email: EmailStr, first_name: str, code: str, expiry_minutes: int = 10
+) -> bool:
+    """Send 2FA login code email."""
+    try:
+        body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #0066cc;">IU Alumni — Login Verification</h2>
+                    <p>Hi {first_name},</p>
+                    <p>Use the code below to complete your login. It expires in {expiry_minutes} minutes.</p>
+                    <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
+                        <h1 style="color: #0066cc; letter-spacing: 5px; margin: 0;">{code}</h1>
+                    </div>
+                    <p>If you didn't attempt to log in, please ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+                    <p style="font-size: 12px; color: #666;">
+                        This is an automated message from IU Alumni Platform.
+                        Please do not reply to this email.
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+        message = MessageSchema(
+            subject="IU Alumni — Your login code",
+            recipients=[email],
+            body=body,
+            subtype=MessageType.html,
+        )
+        await fm.send_message(message)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send login code email: {e!s}")
+        return False
+
+
+async def send_password_reset_email(
+    email: EmailStr, first_name: str, reset_link: str, expiry_minutes: int = 30
+) -> bool:
+    """Send password reset link email."""
+    try:
+        body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #0066cc;">Password Reset Request</h2>
+                    <p>Hi {first_name},</p>
+                    <p>We received a request to reset your IU Alumni Platform password.
+                    Click the button below to set a new password. This link expires in {expiry_minutes} minutes.</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_link}"
+                           style="background-color: #0066cc; color: white; padding: 12px 30px;
+                                  text-decoration: none; border-radius: 4px; font-size: 16px;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p>Or copy this link into your browser:</p>
+                    <p style="word-break: break-all; color: #0066cc;">{reset_link}</p>
+                    <p>If you didn't request a password reset, please ignore this email.
+                    Your password will not be changed.</p>
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+                    <p style="font-size: 12px; color: #666;">
+                        This is an automated message from IU Alumni Platform.
+                        Please do not reply to this email.
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+        message = MessageSchema(
+            subject="IU Alumni — Reset your password",
+            recipients=[email],
+            body=body,
+            subtype=MessageType.html,
+        )
+        await fm.send_message(message)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send password reset email: {e!s}")
+        return False
+
+
 async def send_verification_email(
     email: EmailStr, first_name: str, verification_code: str
 ) -> bool:

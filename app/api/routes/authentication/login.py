@@ -1,28 +1,34 @@
+import os
+import uuid
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import create_access_token, verify_password
+from app.models.login_code import LoginCode
 from app.models.users import Admin, Alumni
-from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.auth import LoginInitResponse, LoginRequest, TokenResponse
+from app.services.email_service import send_login_code_email
+from app.services.verification_service import generate_verification_code
 
 
 router = APIRouter()
 
+LOGIN_CODE_EXPIRY_MINUTES = int(os.getenv("LOGIN_CODE_EXPIRY_MINUTES", "10"))
 
-@router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+
+@router.post("/login", response_model=LoginInitResponse)
+async def login(request: LoginRequest, db: Session = Depends(get_db)):
     """
-    Authenticate a user and return a JWT token.
+    Step 1 of login: validate credentials and send a 6-digit code to the
+    university email. Returns a session_token to be used in /login/verify.
+    Admins bypass 2FA and receive a JWT directly via /login/admin.
     """
-    # Check alumni users first
+    # Check alumni users only — admins use /login/admin
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
-    # If not found in alumni, check admin users
-    if not user:
-        user = db.query(Admin).filter(Admin.email == request.email).first()
-
-    # If user not found or password doesn't match
     if (
         not user
         or not user.hashed_password
@@ -33,25 +39,70 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail="Incorrect email or password",
         )
 
-    # Check if alumni user is verified
-    if hasattr(user, "is_verified") and not user.is_verified:
+    if not user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account not verified"
         )
 
-    # Check if alumni user is banned
-    if hasattr(user, "is_banned") and user.is_banned:
+    if user.is_banned:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is banned"
         )
 
-    # Create access token
-    user_data = {
-        "sub": user.email,
-        "user_id": user.id,
-        "user_type": "alumni" if isinstance(user, Alumni) else "admin",
-    }
+    # Generate 2FA code and session token
+    code = generate_verification_code()
+    session_token = str(uuid.uuid4())
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(
+        minutes=LOGIN_CODE_EXPIRY_MINUTES
+    )
 
-    access_token = create_access_token(data=user_data)
+    # Invalidate any previous unused codes for this user
+    db.query(LoginCode).filter(
+        LoginCode.alumni_id == user.id, LoginCode.used.is_(False)
+    ).delete()
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    login_code = LoginCode(
+        id=str(uuid.uuid4()),
+        alumni_id=user.id,
+        session_token=session_token,
+        code=code,
+        expires_at=expires_at,
+        used=False,
+    )
+    db.add(login_code)
+    db.commit()
+
+    await send_login_code_email(
+        email=user.email,
+        first_name=user.first_name,
+        code=code,
+        expiry_minutes=LOGIN_CODE_EXPIRY_MINUTES,
+    )
+
+    return LoginInitResponse(
+        session_token=session_token,
+        message=f"A verification code has been sent to {request.email}",
+    )
+
+
+@router.post("/login/admin", response_model=TokenResponse)
+def login_admin(request: LoginRequest, db: Session = Depends(get_db)):
+    """
+    Admin login — no 2FA, returns JWT directly.
+    """
+    user = db.query(Admin).filter(Admin.email == request.email).first()
+
+    if (
+        not user
+        or not user.hashed_password
+        or not verify_password(request.password, user.hashed_password)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+
+    access_token = create_access_token(
+        data={"sub": user.email, "user_id": user.id, "user_type": "admin"}
+    )
+    return TokenResponse(access_token=access_token, token_type="bearer")
