@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token
 from app.models.login_code import LoginCode
 from app.models.users import Alumni
 from app.schemas.auth import (
@@ -28,21 +28,17 @@ OTP_MAX_ATTEMPTS = 5
 
 @router.post("/login/otp/request", response_model=LoginInitResponse)
 async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_db)):
-    """OTP login step 1: validate email + password, send a 6-digit code to the university email.
+    """OTP login step 1: validate email, send a 6-digit code to the university email.
 
     Returns a session_token for use in /login/otp/verify.
     Rate-limited: one code per 60 seconds per account.
     """
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
-    if (
-        not user
-        or not user.hashed_password
-        or not verify_password(request.password, user.hashed_password)
-    ):
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="No account found with this email",
         )
 
     if not user.is_verified:
