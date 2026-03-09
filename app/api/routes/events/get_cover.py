@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -9,6 +10,8 @@ from app.schemas.event import CoverResponse
 
 
 router = APIRouter()
+
+_IMAGE_CACHE_SECONDS = 3600
 
 
 @router.get("/{event_id}/cover", response_model=CoverResponse)
@@ -23,4 +26,7 @@ def get_event_cover(
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    return {"cover": event.cover}
+    return JSONResponse(
+        content={"cover": event.cover},
+        headers={"Cache-Control": f"private, max-age={_IMAGE_CACHE_SECONDS}"},
+    )

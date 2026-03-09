@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -8,6 +9,8 @@ from app.schemas.profile import AvatarResponse, ProfileResponse
 
 
 router = APIRouter()
+
+_IMAGE_CACHE_SECONDS = 3600
 
 
 @router.get("/{user_id}/avatar", response_model=AvatarResponse)
@@ -22,7 +25,10 @@ def get_avatar_by_id(
     user = db.query(Alumni).filter(Alumni.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"avatar": user.avatar}
+    return JSONResponse(
+        content={"avatar": user.avatar},
+        headers={"Cache-Control": f"private, max-age={_IMAGE_CACHE_SECONDS}"},
+    )
 
 
 @router.get("/{user_id}", response_model=ProfileResponse)
