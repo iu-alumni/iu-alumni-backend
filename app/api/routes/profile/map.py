@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.cities import City
 from app.models.users import Admin, Alumni
-from app.schemas.profile import MapLocationsResponse, MapLocationGroup
+from app.schemas.profile import MapLocationGroup, MapLocationsResponse
 
 
 router = APIRouter()
@@ -32,16 +32,16 @@ def get_map_locations(
     - ``ix_alumni_show_location_location`` composite B-tree (leading filter)
     - ``idx_city_name`` / ``idx_country`` B-tree on cities table (JOIN condition)
     """
-    country_expr = func.split_part(Alumni.location, ', ', 1)
-    city_expr = func.split_part(Alumni.location, ', ', 2)
+    country_expr = func.split_part(Alumni.location, ", ", 1)
+    city_expr = func.split_part(Alumni.location, ", ", 2)
 
     rows = (
         db.query(
-            country_expr.label('country'),
-            city_expr.label('city'),
+            country_expr.label("country"),
+            city_expr.label("city"),
             City.lat,
             City.lng,
-            func.count(Alumni.id).label('count'),
+            func.count(Alumni.id).label("count"),
         )
         .join(
             City,
@@ -51,7 +51,7 @@ def get_map_locations(
         .filter(
             Alumni.show_location.is_(True),
             Alumni.location.isnot(None),
-            Alumni.location.like('%, %'),
+            Alumni.location.like("%, %"),
             Alumni.is_verified.is_(True),
             Alumni.is_banned.is_(False),
         )

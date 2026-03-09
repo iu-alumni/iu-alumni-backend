@@ -1,0 +1,52 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+  <!-- Success icon row -->
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+         style="margin:0 0 28px;">
+    <tr>
+      <td align="center">
+        <div style="display:inline-block;width:64px;height:64px;border-radius:50%;
+                    background-color:#f0fdf4;border:2px solid #40BA21;
+                    text-align:center;line-height:64px;font-size:28px;">
+          ✓
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;text-align:center;">
+    Account Verified!
+  </h2>
+  <p style="margin:0 0 28px;font-size:14px;color:#6b7280;text-align:center;">
+    Welcome to the IU Alumni community
+  </p>
+
+  <p style="margin:0 0 8px;font-size:15px;color:#374151;line-height:1.6;">
+    Hi <strong>{{ first_name }}</strong>,
+  </p>
+  <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+    Your IU Alumni account has been successfully verified.
+    You can now log in and start connecting with fellow Innopolis University alumni.
+  </p>
+
+  <!-- Highlight box -->
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+         style="margin:0 0 28px;background-color:#f0fdf4;border-left:4px solid #40BA21;
+                border-radius:0 8px 8px 0;">
+    <tr>
+      <td style="padding:16px 20px;">
+        <p style="margin:0;font-size:14px;color:#166534;line-height:1.6;">
+          🎓 You're now part of a growing network of Innopolis University graduates.
+          Update your profile to help alumni find and connect with you.
+        </p>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+    We're excited to have you with us!
+  </p>
+
+{% endblock %}
