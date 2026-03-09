@@ -9,8 +9,10 @@ class EmailVerification(Base):
 
     id = Column(String, primary_key=True)
     alumni_id = Column(String, ForeignKey("alumni.id"), unique=True, nullable=False)
-    verification_code = Column(String, nullable=False)
-    verification_code_expires = Column(DateTime, nullable=False)
+    verification_code = Column(String, nullable=True)
+    verification_code_expires = Column(DateTime, nullable=True)
+    verification_token = Column(String, nullable=True, unique=True, index=True)
+    verification_token_expires = Column(DateTime, nullable=True)
     verification_requested_at = Column(DateTime, nullable=False)
     manual_verification_requested = Column(Boolean, default=False)
     verified_at = Column(DateTime, nullable=True)

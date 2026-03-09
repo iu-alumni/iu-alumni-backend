@@ -5,6 +5,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.routing import APIRouter
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.routes.admin import router as admin_router
@@ -108,11 +109,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-app.include_router(profile_router, prefix="/profile", tags=["Profile"])
-app.include_router(events_router, prefix="/events", tags=["Events"])
-app.include_router(admin_router, prefix="/admin", tags=["Admin"])
-app.include_router(cities_router, prefix="/cities", tags=["Cities"])
+api_v1 = APIRouter(prefix="/api/v1")
+api_v1.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+api_v1.include_router(profile_router, prefix="/profile", tags=["Profile"])
+api_v1.include_router(events_router, prefix="/events", tags=["Events"])
+api_v1.include_router(admin_router, prefix="/admin", tags=["Admin"])
+api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
+app.include_router(api_v1)
 app.include_router(telegram_router, tags=["Telegram"])
 
 Instrumentator().instrument(app).expose(app)

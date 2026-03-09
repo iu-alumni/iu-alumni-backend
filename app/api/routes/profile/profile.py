@@ -57,7 +57,10 @@ def update_profile(
         current_user.biography = profile_data.biography
 
     if profile_data.telegram_alias is not None:
-        current_user.telegram_alias = profile_data.telegram_alias
+        new_alias = profile_data.telegram_alias
+        if new_alias != current_user.telegram_alias:
+            current_user.telegram_alias = new_alias
+            current_user.is_telegram_verified = False
 
     if profile_data.avatar is not None:
         current_user.avatar = profile_data.avatar

@@ -172,3 +172,49 @@ async def send_verification_success_email(email: EmailStr, first_name: str) -> b
         logger.exception("Failed to send verification success email to %s", email)
         return False
 
+
+async def send_verification_link_email(
+    email: EmailStr, first_name: str, verify_link: str, expiry_hours: int = 24
+) -> bool:
+    """Send link-based registration email verification."""
+    try:
+        message = MessageSchema(
+            subject="Verify your IU Alumni account",
+            recipients=[email],
+            template_body={
+                "first_name": first_name,
+                "verify_link": verify_link,
+                "expiry_hours": expiry_hours,
+            },
+            subtype=MessageType.html,
+        )
+        logger.info("Sending verification link email to %s", email)
+        await fm.send_message(message, template_name="verification_link.html")
+        return True
+    except Exception:
+        logger.exception("Failed to send verification link email to %s", email)
+        return False
+
+
+async def send_telegram_verification_email(
+    email: EmailStr, first_name: str, telegram_alias: str, verify_link: str, expiry_hours: int = 24
+) -> bool:
+    """Send link-based Telegram account verification email."""
+    try:
+        message = MessageSchema(
+            subject="Confirm your Telegram account — IU Alumni",
+            recipients=[email],
+            template_body={
+                "first_name": first_name,
+                "telegram_alias": telegram_alias.lstrip("@"),
+                "verify_link": verify_link,
+                "expiry_hours": expiry_hours,
+            },
+            subtype=MessageType.html,
+        )
+        logger.info("Sending Telegram verification email to %s", email)
+        await fm.send_message(message, template_name="telegram_verification.html")
+        return True
+    except Exception:
+        logger.exception("Failed to send Telegram verification email to %s", email)
+        return False
