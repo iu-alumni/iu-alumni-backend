@@ -111,5 +111,38 @@ class TelegramBotService:
                 raise
 
 
+    async def send_login_code(
+        self,
+        chat_id: int,
+        first_name: str,
+        code: str,
+        expiry_minutes: int = 10,
+    ) -> bool:
+        """Send an OTP login code via Telegram DM.
+
+        Args:
+            chat_id: Recipient's Telegram chat ID
+            first_name: Recipient's first name
+            code: 6-digit OTP code
+            expiry_minutes: Minutes until code expires
+
+        Returns:
+            True if sent successfully, False otherwise
+        """
+        text = (
+            f"👋 Hello, {first_name}!\n\n"
+            f"Your IU Alumni login code is:\n\n"
+            f"<b>{code}</b>\n\n"
+            f"⏱ This code expires in {expiry_minutes} minutes.\n"
+            f"Do not share it with anyone."
+        )
+        try:
+            await self.send_message(chat_id=chat_id, text=text)
+            return True
+        except Exception:
+            app_logger.exception("Failed to send OTP via Telegram to chat_id=%s", chat_id)
+            return False
+
+
 # Singleton instance
 telegram_service = TelegramBotService()

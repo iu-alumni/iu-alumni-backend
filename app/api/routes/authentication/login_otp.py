@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.models.login_code import LoginCode
+from app.models.telegram import TelegramUser
 from app.models.users import Alumni
 from app.schemas.auth import (
     LoginInitResponse,
@@ -16,6 +17,7 @@ from app.schemas.auth import (
     TokenResponse,
 )
 from app.services.email_service import send_login_code_email
+from app.services.telegram_bot import telegram_service
 from app.services.verification_service import generate_verification_code
 
 
@@ -95,10 +97,27 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
     )
 
     if not email_sent:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send login code email. Please try again later.",
-        )
+        # Email failed — try Telegram as fallback if the user has linked their account
+        telegram_sent = False
+        if user.telegram_alias:
+            tg_user = (
+                db.query(TelegramUser)
+                .filter(TelegramUser.alias == user.telegram_alias)
+                .first()
+            )
+            if tg_user:
+                telegram_sent = await telegram_service.send_login_code(
+                    chat_id=tg_user.chat_id,
+                    first_name=user.first_name,
+                    code=code,
+                    expiry_minutes=LOGIN_CODE_EXPIRY_MINUTES,
+                )
+
+        if not telegram_sent:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send login code. Please try again later.",
+            )
 
     return LoginInitResponse(
         session_token=session_token,
