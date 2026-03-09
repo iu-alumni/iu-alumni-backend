@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+import os
 import random
+import secrets
 import string
 
 from sqlalchemy.orm import Session
@@ -9,26 +11,27 @@ from app.models.email_verification import EmailVerification
 from app.models.users import Alumni
 
 
+VERIFICATION_LINK_EXPIRY_HOURS = int(os.getenv("VERIFICATION_LINK_EXPIRY_HOURS", "24"))
+
+
 def generate_verification_code() -> str:
     """Generate a 6-digit verification code"""
     return "".join(random.choices(string.digits, k=6))
 
 
-def create_verification_record(
-    db: Session, alumni_id: str, manual_verification: bool = False
-) -> EmailVerification:
+def create_link_verification_record(
+    db: Session, alumni_id: str
+) -> tuple[EmailVerification, str]:
     """
-    Create a new email verification record
-
-    Args:
-        db: Database session
-        alumni_id: ID of the alumni user
-        manual_verification: Whether manual verification was requested
+    Create or update a link-based email verification record.
 
     Returns:
-        EmailVerification: Created verification record
+        tuple: (EmailVerification record, raw token string)
     """
-    # Check if verification record already exists
+    token = secrets.token_urlsafe(32)
+    now = datetime.utcnow()
+    expires = now + timedelta(hours=VERIFICATION_LINK_EXPIRY_HOURS)
+
     existing = (
         db.query(EmailVerification)
         .filter(EmailVerification.alumni_id == alumni_id)
@@ -36,23 +39,91 @@ def create_verification_record(
     )
 
     if existing:
-        # Update existing record with new code
+        existing.verification_token = token
+        existing.verification_token_expires = expires
+        existing.verification_requested_at = now
+        existing.verified_at = None
+        db.commit()
+        db.refresh(existing)
+        return existing, token
+
+    record = EmailVerification(
+        id=get_random_token(),
+        alumni_id=alumni_id,
+        verification_token=token,
+        verification_token_expires=expires,
+        verification_requested_at=now,
+        manual_verification_requested=False,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record, token
+
+
+def verify_by_token(db: Session, token: str) -> tuple[bool, str, Alumni | None]:
+    """
+    Verify a user via their email verification token.
+
+    Returns:
+        tuple: (success, message, alumni_or_None)
+    """
+    record = (
+        db.query(EmailVerification)
+        .filter(EmailVerification.verification_token == token)
+        .first()
+    )
+
+    if not record:
+        return False, "Invalid or expired verification link", None
+
+    if record.verified_at is not None:
+        return False, "Account already verified", None
+
+    if record.verification_token_expires is None or datetime.utcnow() > record.verification_token_expires:
+        return False, "Verification link has expired. Please request a new one.", None
+
+    alumni = db.query(Alumni).filter(Alumni.id == record.alumni_id).first()
+    if not alumni:
+        return False, "User not found", None
+
+    alumni.is_verified = True
+    record.verified_at = datetime.utcnow()
+    record.verification_token = None  # invalidate
+    db.commit()
+
+    return True, "Email verified successfully", alumni
+
+
+def create_verification_record(
+    db: Session, alumni_id: str, manual_verification: bool = False
+) -> EmailVerification:
+    """
+    Create a new email verification record (legacy code path used for manual verification).
+    """
+    existing = (
+        db.query(EmailVerification)
+        .filter(EmailVerification.alumni_id == alumni_id)
+        .first()
+    )
+
+    now = datetime.utcnow()
+    if existing:
         existing.verification_code = generate_verification_code()
-        existing.verification_code_expires = datetime.utcnow() + timedelta(hours=1)
-        existing.verification_requested_at = datetime.utcnow()
+        existing.verification_code_expires = now + timedelta(hours=1)
+        existing.verification_requested_at = now
         existing.manual_verification_requested = manual_verification
         existing.verified_at = None
         db.commit()
         db.refresh(existing)
         return existing
 
-    # Create new verification record
     verification = EmailVerification(
         id=get_random_token(),
         alumni_id=alumni_id,
         verification_code=generate_verification_code(),
-        verification_code_expires=datetime.utcnow() + timedelta(hours=1),
-        verification_requested_at=datetime.utcnow(),
+        verification_code_expires=now + timedelta(hours=1),
+        verification_requested_at=now,
         manual_verification_requested=manual_verification,
     )
 
@@ -65,17 +136,8 @@ def create_verification_record(
 
 def verify_code(db: Session, email: str, code: str) -> tuple[bool, str]:
     """
-    Verify the provided verification code
-
-    Args:
-        db: Database session
-        email: User's email
-        code: Verification code to check
-
-    Returns:
-        tuple: (success: bool, message: str)
+    Verify the provided verification code (used by admin-verify path).
     """
-    # Get the alumni record
     alumni = db.query(Alumni).filter(Alumni.email == email).first()
     if not alumni:
         return False, "User not found"
@@ -83,7 +145,6 @@ def verify_code(db: Session, email: str, code: str) -> tuple[bool, str]:
     if alumni.is_verified:
         return False, "User already verified"
 
-    # Get verification record
     verification = (
         db.query(EmailVerification)
         .filter(EmailVerification.alumni_id == alumni.id)
@@ -93,35 +154,24 @@ def verify_code(db: Session, email: str, code: str) -> tuple[bool, str]:
     if not verification:
         return False, "No verification record found"
 
-    # Check if code matches
+    if not verification.verification_code:
+        return False, "No verification code issued for this account"
+
     if verification.verification_code != code:
         return False, "Invalid verification code"
 
-    # Check if code has expired
-    if datetime.utcnow() > verification.verification_code_expires:
+    if verification.verification_code_expires and datetime.utcnow() > verification.verification_code_expires:
         return False, "Verification code has expired"
 
-    # Mark as verified
     alumni.is_verified = True
     verification.verified_at = datetime.utcnow()
-
     db.commit()
 
     return True, "Email verified successfully"
 
 
 def admin_verify_user(db: Session, email: str) -> tuple[bool, str]:
-    """
-    Admin manual verification of a user
-
-    Args:
-        db: Database session
-        email: User's email to verify
-
-    Returns:
-        tuple: (success: bool, message: str)
-    """
-    # Get the alumni record
+    """Admin manual verification of a user."""
     alumni = db.query(Alumni).filter(Alumni.email == email).first()
     if not alumni:
         return False, "User not found"
@@ -129,36 +179,22 @@ def admin_verify_user(db: Session, email: str) -> tuple[bool, str]:
     if alumni.is_verified:
         return False, "User already verified"
 
-    # Mark as verified
     alumni.is_verified = True
 
-    # Update verification record if exists
     verification = (
         db.query(EmailVerification)
         .filter(EmailVerification.alumni_id == alumni.id)
         .first()
     )
-
     if verification:
         verification.verified_at = datetime.utcnow()
 
     db.commit()
-
     return True, "User verified successfully"
 
 
 def can_resend_verification(db: Session, email: str) -> tuple[bool, str, str | None]:
-    """
-    Check if user can request a new verification code
-
-    Args:
-        db: Database session
-        email: User's email
-
-    Returns:
-        tuple: (can_resend: bool, message: str, alumni_id: Optional[str])
-    """
-    # Get the alumni record
+    """Check if user can request a new verification link."""
     alumni = db.query(Alumni).filter(Alumni.email == email).first()
     if not alumni:
         return False, "User not found", None
@@ -166,7 +202,6 @@ def can_resend_verification(db: Session, email: str) -> tuple[bool, str, str | N
     if alumni.is_verified:
         return False, "User already verified", None
 
-    # Check if verification record exists
     verification = (
         db.query(EmailVerification)
         .filter(EmailVerification.alumni_id == alumni.id)
@@ -174,15 +209,12 @@ def can_resend_verification(db: Session, email: str) -> tuple[bool, str, str | N
     )
 
     if verification:
-        # Check rate limiting - allow resend after 60 seconds
-        time_since_last_request = (
-            datetime.utcnow() - verification.verification_requested_at
-        )
+        time_since_last_request = datetime.utcnow() - verification.verification_requested_at
         if time_since_last_request < timedelta(seconds=60):
             seconds_to_wait = 60 - time_since_last_request.total_seconds()
             return (
                 False,
-                f"Please wait {int(seconds_to_wait)} seconds before requesting a new code",
+                f"Please wait {int(seconds_to_wait)} seconds before requesting a new link",
                 None,
             )
 
@@ -190,17 +222,7 @@ def can_resend_verification(db: Session, email: str) -> tuple[bool, str, str | N
 
 
 def admin_unverify_user(db: Session, email: str) -> tuple[bool, str]:
-    """
-    Admin unverification of a user
-
-    Args:
-        db: Database session
-        email: User's email to unverify
-
-    Returns:
-        tuple: (success: bool, message: str)
-    """
-    # Get the alumni record
+    """Admin unverification of a user."""
     alumni = db.query(Alumni).filter(Alumni.email == email).first()
     if not alumni:
         return False, "User not found"
@@ -208,19 +230,16 @@ def admin_unverify_user(db: Session, email: str) -> tuple[bool, str]:
     if not alumni.is_verified:
         return False, "User is not verified"
 
-    # Mark as unverified
     alumni.is_verified = False
 
-    # Update verification record if exists
     verification = (
         db.query(EmailVerification)
         .filter(EmailVerification.alumni_id == alumni.id)
         .first()
     )
-
     if verification:
         verification.verified_at = None
 
     db.commit()
-
     return True, "User unverified successfully"
+

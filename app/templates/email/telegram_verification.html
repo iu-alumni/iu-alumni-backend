@@ -1,0 +1,59 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+  <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">
+    Confirm Your Telegram Account
+  </h2>
+  <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">
+    Link <strong>@{{ telegram_alias }}</strong> to your IU Alumni login
+  </p>
+
+  <p style="margin:0 0 8px;font-size:15px;color:#374151;line-height:1.6;">
+    Hi <strong>{{ first_name }}</strong>,
+  </p>
+  <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.6;">
+    Click the button below to verify that <strong>@{{ telegram_alias }}</strong> is your
+    Telegram account. Once verified, you will be able to log in to IU Alumni using
+    a Telegram code. This link expires in <strong>{{ expiry_hours }} hour{{ 's' if expiry_hours != 1 else '' }}</strong>.
+  </p>
+
+  <!-- CTA button -->
+  <table role="presentation" border="0" cellspacing="0" cellpadding="0"
+         style="margin:0 0 28px;">
+    <tr>
+      <td align="center" style="border-radius:7px;background-color:#2CA5E0;">
+        <a href="{{ verify_link }}"
+           style="display:inline-block;padding:14px 36px;font-size:16px;font-weight:700;
+                  color:#ffffff;text-decoration:none;border-radius:7px;
+                  background-color:#2CA5E0;letter-spacing:0.1px;">
+          Verify Telegram
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Fallback link -->
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+         style="margin:0 0 28px;background-color:#f9fafb;border:1px solid #e5e7eb;
+                border-radius:8px;">
+    <tr>
+      <td style="padding:16px 20px;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;
+                  letter-spacing:0.5px;text-transform:uppercase;">
+          Or copy this link into your browser
+        </p>
+        <p style="margin:0;font-size:13px;color:#2CA5E0;word-break:break-all;
+                  line-height:1.5;">
+          {{ verify_link }}
+        </p>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+    If you didn't request Telegram verification, please ignore this email.
+    Your account settings will not change.
+  </p>
+
+{% endblock %}

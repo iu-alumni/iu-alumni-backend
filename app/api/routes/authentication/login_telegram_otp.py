@@ -8,14 +8,10 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.models.login_code import LoginCode
+from app.models.telegram import TelegramUser
 from app.models.users import Alumni
-from app.schemas.auth import (
-    LoginInitResponse,
-    LoginOTPRequest,
-    LoginVerifyRequest,
-    TokenResponse,
-)
-from app.services.email_service import send_login_code_email
+from app.schemas.auth import LoginInitResponse, TelegramLoginRequest, TelegramVerifyRequest, TokenResponse
+from app.services.telegram_bot import telegram_service
 from app.services.verification_service import generate_verification_code
 
 
@@ -26,12 +22,12 @@ OTP_COOLDOWN_SECONDS = 60
 OTP_MAX_ATTEMPTS = 5
 
 
-@router.post("/login/otp/request", response_model=LoginInitResponse)
-async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_db)):
-    """OTP login step 1: validate email, send a 6-digit code to the university email.
+@router.post("/login/telegram/request", response_model=LoginInitResponse)
+async def login_telegram_request(request: TelegramLoginRequest, db: Session = Depends(get_db)):
+    """Telegram OTP login step 1: validate email, check telegram is verified, send 6-digit code via bot.
 
-    Returns a session_token for use in /login/otp/verify.
-    Rate-limited: one code per 60 seconds per account.
+    Requires the user to have verified their Telegram account via the profile page.
+    Returns a session_token for use in /login/telegram/verify.
     """
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
@@ -51,9 +47,25 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is banned"
         )
 
+    if not user.is_telegram_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Telegram not verified for this account. Please verify your Telegram account via your profile settings.",
+        )
+
+    tg_user = (
+        db.query(TelegramUser)
+        .filter(TelegramUser.alias == user.telegram_alias)
+        .first()
+    )
+    if not tg_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Telegram bot not started. Please open the bot and send /start first.",
+        )
+
     now = datetime.now(UTC).replace(tzinfo=None)
 
-    # Cooldown: reject if a code was issued less than 60 seconds ago
     recent = (
         db.query(LoginCode)
         .filter(LoginCode.alumni_id == user.id, LoginCode.used.is_(False))
@@ -67,7 +79,6 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
             detail=f"Please wait {seconds_left} seconds before requesting a new code",
         )
 
-    # Invalidate previous unused codes
     db.query(LoginCode).filter(
         LoginCode.alumni_id == user.id, LoginCode.used.is_(False)
     ).delete()
@@ -87,31 +98,28 @@ async def login_otp_request(request: LoginOTPRequest, db: Session = Depends(get_
     ))
     db.commit()
 
-    email_sent = await send_login_code_email(
-        email=user.email,
+    sent = await telegram_service.send_login_code(
+        chat_id=tg_user.chat_id,
         first_name=user.first_name,
         code=code,
         expiry_minutes=LOGIN_CODE_EXPIRY_MINUTES,
     )
 
-    if not email_sent:
+    if not sent:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send login code. Please try again later.",
+            detail="Failed to send Telegram code. Please try again later.",
         )
 
     return LoginInitResponse(
         session_token=session_token,
-        message=f"A verification code has been sent to {request.email}",
+        message="A verification code has been sent to your Telegram account",
     )
 
 
-@router.post("/login/otp/verify", response_model=TokenResponse)
-def login_otp_verify(request: LoginVerifyRequest, db: Session = Depends(get_db)):
-    """OTP login step 2: submit session_token + 6-digit code.
-
-    Invalidated after 5 wrong attempts or expiry.
-    """
+@router.post("/login/telegram/verify", response_model=TokenResponse)
+def login_telegram_verify(request: TelegramVerifyRequest, db: Session = Depends(get_db)):
+    """Telegram OTP login step 2: submit session_token + 6-digit code."""
     login_code = (
         db.query(LoginCode)
         .filter(LoginCode.session_token == request.session_token)

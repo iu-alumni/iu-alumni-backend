@@ -16,6 +16,7 @@ from app.models.login_code import LoginCode
 from app.models.password_reset_token import PasswordResetToken
 from app.models.settings import Setting
 from app.models.telegram import Feedback, Poll, TelegramUser
+from app.models.telegram_verify_token import TelegramVerifyToken
 from app.models.users import Admin, Alumni
 
 

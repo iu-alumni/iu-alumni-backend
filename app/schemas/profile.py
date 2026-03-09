@@ -14,6 +14,7 @@ class ProfileResponse(BaseModel):
     biography: str | None = None
     show_location: bool = False
     telegram_alias: str | None = None
+    is_telegram_verified: bool = False
     avatar: str | None = None
 
     class Config:

@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -46,7 +47,7 @@ class RegisterRequest(BaseModel):
     last_name: str = Field(..., min_length=1, max_length=100)
     graduation_year: str
     email: EmailStr
-    telegram_alias: str = Field(..., min_length=3, max_length=50)
+    telegram_alias: Optional[str] = Field(None, min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
     manual_verification: bool = False
 
@@ -61,10 +62,10 @@ class RegisterRequest(BaseModel):
 
     @field_validator("telegram_alias")
     def validate_telegram_alias(cls, v):
-        # Remove @ if present at the beginning
+        if v is None:
+            return v
         if v.startswith("@"):
             v = v[1:]
-        # Validate Telegram username format
         if not re.match(r"^[a-zA-Z0-9_]{3,32}$", v):
             raise ValueError("Invalid Telegram username format")
         return v
@@ -90,3 +91,19 @@ class ResendVerificationRequest(BaseModel):
                 "Email must be an Innopolis email (@innopolis.university or @innopolis.ru)"
             )
         return v
+
+
+# Telegram OTP login schemas
+class TelegramLoginRequest(BaseModel):
+    email: EmailStr
+
+
+class TelegramVerifyRequest(BaseModel):
+    session_token: str
+    code: str = Field(..., pattern=r"^\d{6}$")
+
+
+# Telegram account verification schemas (profile)
+class TelegramVerifyRequestResponse(BaseModel):
+    message: str
+
