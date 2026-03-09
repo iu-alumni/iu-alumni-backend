@@ -5,7 +5,6 @@ from app.api.routes.events import (
     delete_event,
     event_add_participant,
     event_remove_participant,
-    get_cover,
     get_event,
     list_event_participants,
     list_events,
@@ -23,7 +22,6 @@ router.include_router(create_event.router)
 router.include_router(list_events.router)
 router.include_router(list_owner_events.router)
 router.include_router(list_participant_events.router)
-router.include_router(get_cover.router)
 router.include_router(get_event.router)
 router.include_router(delete_event.router)
 router.include_router(event_add_participant.router)

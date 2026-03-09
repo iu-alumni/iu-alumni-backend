@@ -1,10 +1,6 @@
 from pydantic import BaseModel
 
 
-class AvatarResponse(BaseModel):
-    avatar: str | None = None
-
-
 class ProfileResponse(BaseModel):
     id: str
     first_name: str
