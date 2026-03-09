@@ -36,7 +36,21 @@ class ProfileListItem(BaseModel):
         from_attributes = True
 
 
-class ProfileUpdateRequest(BaseModel):
+class MapLocationGroup(BaseModel):
+    """A location pin on the alumni map: one entry per unique city."""
+
+    country: str
+    city: str
+    lat: float
+    lng: float
+    count: int
+
+
+class MapLocationsResponse(BaseModel):
+    locations: list[MapLocationGroup]
+
+
+
     first_name: str | None = None
     last_name: str | None = None
     graduation_year: str | None = None
