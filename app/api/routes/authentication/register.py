@@ -121,4 +121,3 @@ async def register(
         "message": "Registration successful. Your account is pending manual verification by an administrator.",
         "email": new_user.email,
     }
-
