@@ -5,6 +5,10 @@ import dateutil.parser
 from pydantic import BaseModel
 
 
+class CoverResponse(BaseModel):
+    cover: str | None = None
+
+
 class Event(BaseModel):
     id: str
     owner_id: str
