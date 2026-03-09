@@ -1,0 +1,52 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+  <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">
+    Manual Verification Request
+  </h2>
+  <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">
+    A new user is waiting for manual review
+  </p>
+
+  <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+    The following user has requested manual account verification:
+  </p>
+
+  <!-- User details card -->
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+         style="margin:0 0 28px;background-color:#f9fafb;border:1px solid #e5e7eb;
+                border-radius:8px;">
+    <tr>
+      <td style="padding:20px 24px;">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="padding:6px 0;border-bottom:1px solid #e5e7eb;">
+              <p style="margin:0;font-size:12px;font-weight:600;color:#9ca3af;
+                        text-transform:uppercase;letter-spacing:0.5px;">Name</p>
+              <p style="margin:4px 0 0;font-size:15px;color:#111827;font-weight:600;">
+                {{ user_name }}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0 0;">
+              <p style="margin:0;font-size:12px;font-weight:600;color:#9ca3af;
+                        text-transform:uppercase;letter-spacing:0.5px;">Email</p>
+              <p style="margin:4px 0 0;font-size:15px;color:#40BA21;">
+                {{ user_email }}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+    Please review this user in the
+    <strong style="color:#374151;">admin panel</strong>
+    and approve or reject their registration.
+  </p>
+
+{% endblock %}
