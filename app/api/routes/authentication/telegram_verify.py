@@ -2,6 +2,7 @@ import os
 import secrets
 from datetime import UTC, datetime, timedelta
 
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -57,8 +58,8 @@ async def telegram_verify_request(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                f"Telegram bot not started. Please open @IU_Alumni_Notification_Bot "
-                f"and send /start, then try again."
+                "Telegram bot not started. Please open @IU_Alumni_Notification_Bot "
+                "and send /start, then try again."
             ),
         )
 
@@ -108,6 +109,7 @@ def telegram_verify_confirm(
 ):
     """
     Confirm Telegram account via link (opened in browser from email).
+
     Sets is_telegram_verified=True on the user's account.
     """
     record = (

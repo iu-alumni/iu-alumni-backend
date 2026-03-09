@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -47,7 +46,7 @@ class RegisterRequest(BaseModel):
     last_name: str = Field(..., min_length=1, max_length=100)
     graduation_year: str
     email: EmailStr
-    telegram_alias: Optional[str] = Field(None, min_length=3, max_length=50)
+    telegram_alias: str | None = Field(None, min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
     manual_verification: bool = False
 

@@ -1,6 +1,6 @@
 import os
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -24,6 +24,7 @@ async def verify_email_link(
 ):
     """
     Verify email via a link token (sent during registration).
+
     Opened in the user's browser from the email confirmation link.
     """
     success, message, alumni = verify_by_token(db, token)
