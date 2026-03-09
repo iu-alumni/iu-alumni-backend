@@ -1,7 +1,6 @@
+from datetime import UTC, datetime, timedelta
 import os
 import secrets
-from datetime import UTC, datetime, timedelta
-
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse

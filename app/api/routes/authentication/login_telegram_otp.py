@@ -1,6 +1,6 @@
+from datetime import UTC, datetime, timedelta
 import os
 import uuid
-from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -10,7 +10,12 @@ from app.core.security import create_access_token
 from app.models.login_code import LoginCode
 from app.models.telegram import TelegramUser
 from app.models.users import Alumni
-from app.schemas.auth import LoginInitResponse, TelegramLoginRequest, TelegramVerifyRequest, TokenResponse
+from app.schemas.auth import (
+    LoginInitResponse,
+    TelegramLoginRequest,
+    TelegramVerifyRequest,
+    TokenResponse,
+)
 from app.services.telegram_bot import telegram_service
 from app.services.verification_service import generate_verification_code
 

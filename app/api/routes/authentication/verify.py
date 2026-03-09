@@ -11,6 +11,7 @@ from app.schemas.auth import TokenResponse, VerifyEmailRequest
 from app.services.email_service import send_verification_success_email
 from app.services.verification_service import verify_by_token, verify_code
 
+
 MINI_APP_URL = os.getenv("MINI_APP_URL", "")
 
 router = APIRouter()

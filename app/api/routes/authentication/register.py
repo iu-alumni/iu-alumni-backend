@@ -13,7 +13,10 @@ from app.services.email_service import (
     send_verification_link_email,
 )
 from app.services.notification_service import NotificationService
-from app.services.verification_service import create_link_verification_record, create_verification_record
+from app.services.verification_service import (
+    create_link_verification_record,
+    create_verification_record,
+)
 
 
 # Get logger for this module

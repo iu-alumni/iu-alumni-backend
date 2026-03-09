@@ -12,6 +12,7 @@ from app.services.verification_service import (
     create_link_verification_record,
 )
 
+
 BACKEND_URL = os.getenv("BACKEND_URL", "")
 
 router = APIRouter()
