@@ -81,7 +81,7 @@ async def telegram_verify_request(
     ))
     db.commit()
 
-    verify_url = f"{BACKEND_URL}/auth/telegram/verify?token={token}"
+    verify_url = f"{BACKEND_URL}/api/v1/auth/telegram/verify?token={token}"
     email_sent = await send_telegram_verification_email(
         email=current_user.email,
         first_name=current_user.first_name,

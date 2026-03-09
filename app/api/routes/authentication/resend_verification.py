@@ -39,7 +39,7 @@ async def resend_verification_link(
         )
 
     _, token = create_link_verification_record(db, user.id)
-    verify_url = f"{BACKEND_URL}/auth/verify?token={token}"
+    verify_url = f"{BACKEND_URL}/api/v1/auth/verify?token={token}"
 
     background_tasks.add_task(
         send_verification_link_email,
