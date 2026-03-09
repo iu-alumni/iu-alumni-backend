@@ -46,7 +46,7 @@ class RegisterRequest(BaseModel):
     last_name: str = Field(..., min_length=1, max_length=100)
     graduation_year: str
     email: EmailStr
-    telegram_alias: str | None = Field(None, min_length=3, max_length=50)
+    telegram_alias: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
     manual_verification: bool = False
 
@@ -61,8 +61,6 @@ class RegisterRequest(BaseModel):
 
     @field_validator("telegram_alias")
     def validate_telegram_alias(cls, v):
-        if v is None:
-            return v
         if v.startswith("@"):
             v = v[1:]
         if not re.match(r"^[a-zA-Z0-9_]{3,32}$", v):
@@ -105,4 +103,3 @@ class TelegramVerifyRequest(BaseModel):
 # Telegram account verification schemas (profile)
 class TelegramVerifyRequestResponse(BaseModel):
     message: str
-
