@@ -50,7 +50,7 @@ class MapLocationsResponse(BaseModel):
     locations: list[MapLocationGroup]
 
 
-
+class ProfileUpdateRequest(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     graduation_year: str | None = None
