@@ -24,7 +24,7 @@ class Event(BaseModel):
 
 
 class EventListItem(BaseModel):
-    """Slim event schema for list responses — no cover image."""
+    """Slim event schema for list responses — includes cover image."""
 
     id: str
     owner_id: str
@@ -35,6 +35,7 @@ class EventListItem(BaseModel):
     datetime: datetime
     cost: float
     is_online: bool
+    cover: str | None = None
     approved: bool | None = None
 
 
