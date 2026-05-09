@@ -18,7 +18,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  test-and-lint:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
         run: pytest --tb=short -q || [ $? -eq 5 ]
 
   build-image:
-    needs: test-and-lint
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: read
