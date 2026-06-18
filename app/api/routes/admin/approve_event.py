@@ -34,4 +34,20 @@ async def approve_event(
     event.approved = True
     db.commit()
     db.refresh(event)
+
+    # Badge eval for the host (Founding Host, Host with the most, Rainmaker).
+    try:
+        from app.services.badges import award_founding_host, evaluate_for_user
+
+        owner = db.query(Alumni).filter(Alumni.id == event.owner_id).first()
+        if owner is not None:
+            evaluate_for_user(db, owner, "event_approved")
+            if award_founding_host(db, owner, event) is not None:
+                db.commit()
+    except Exception as eval_err:  # noqa: BLE001
+        import logging
+        logging.getLogger("iu_alumni").error(
+            "badge eval failed on event_approved: %s", eval_err
+        )
+
     return event
