@@ -15,13 +15,15 @@ Run with:
 """
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timedelta
 
 from app.core.database import SessionLocal
-from app.models.email_verification import EmailVerification  # noqa: F401 — registers relationship
+from app.models.email_verification import (
+    EmailVerification,  # noqa: F401 — registers relationship
+)
 from app.models.events import Event
 from app.models.users import Alumni
+
 
 USER_EMAIL = "r.mohammed@innopolis.university"
 

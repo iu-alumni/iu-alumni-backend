@@ -72,7 +72,7 @@ def update_profile(
     try:
         from app.services.badges import evaluate_for_user
         evaluate_for_user(db, current_user, "profile_updated")
-    except Exception as eval_err:  # noqa: BLE001
+    except Exception as eval_err:
         import logging
         logging.getLogger("iu_alumni").error(
             "badge eval failed on profile_updated: %s", eval_err

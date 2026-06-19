@@ -44,7 +44,7 @@ async def approve_event(
             evaluate_for_user(db, owner, "event_approved")
             if award_founding_host(db, owner, event) is not None:
                 db.commit()
-    except Exception as eval_err:  # noqa: BLE001
+    except Exception as eval_err:
         import logging
         logging.getLogger("iu_alumni").error(
             "badge eval failed on event_approved: %s", eval_err

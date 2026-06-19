@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import catalog, my_badges, other_badges, mark_seen
+from . import catalog, mark_seen, my_badges, other_badges
 
 
 router = APIRouter()

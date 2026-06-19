@@ -11,10 +11,10 @@ Public entry points:
 """
 from __future__ import annotations
 
-import logging
-import uuid
 from datetime import datetime
-from typing import Any, Iterable
+import logging
+from typing import Any
+import uuid
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from app.models.badge import Badge, UserBadge
 from app.models.events import Event
 from app.models.users import Alumni
+
 
 logger = logging.getLogger("iu_alumni")
 

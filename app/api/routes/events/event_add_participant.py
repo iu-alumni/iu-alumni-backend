@@ -78,7 +78,7 @@ async def add_participant(
         # Badge evaluation (failure-tolerant — never blocks the response).
         try:
             evaluate_for_user(db, participant, "event_attended")
-        except Exception as eval_err:  # noqa: BLE001
+        except Exception as eval_err:
             import logging
             logging.getLogger("iu_alumni").error(
                 "badge eval failed on event_attended: %s", eval_err
