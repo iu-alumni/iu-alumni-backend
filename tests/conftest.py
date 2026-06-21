@@ -1,16 +1,10 @@
+"""Pytest configuration and shared fixtures for the test suite."""
 
-"""Pytest configuration and shared fixtures for the test suite.
+import os
 
-Environment variables must be set *before* any app module is imported because
-``app/core/database.py`` calls ``create_engine`` and ``load_dotenv`` at import
-time.  Patching ``dotenv.load_dotenv`` here ensures a local ``.env`` file cannot
-override the in-memory SQLite URL used during testing.
-"""
-
-import os  # noqa: I001
 
 # ---------------------------------------------------------------------------
-# 1. Set required environment variables before any app imports
+# 1. Set required environment variables FIRST (before any app imports)
 # ---------------------------------------------------------------------------
 _TEST_ENV = {
     "SQLALCHEMY_DATABASE_URL": "sqlite:///:memory:",
@@ -24,23 +18,22 @@ for _key, _val in _TEST_ENV.items():
     os.environ[_key] = _val
 
 # ---------------------------------------------------------------------------
-# 2. Prevent load_dotenv from overriding the test variables above.
-#    database.py does ``from dotenv import load_dotenv`` at import time, so
-#    replacing the function on the module object before that import is enough.
+# 2. Prevent load_dotenv from overriding the test variables above
 # ---------------------------------------------------------------------------
-import dotenv  # noqa: E402, I001
+import dotenv
 
-dotenv.load_dotenv = lambda **_kwargs: None  # type: ignore[assignment]
+
+dotenv.load_dotenv = lambda **_kwargs: None
 
 # ---------------------------------------------------------------------------
-# 3. Import app modules after environment setup
+# 3. NOW import app modules (after environment is set)
 # ---------------------------------------------------------------------------
-import pytest  # noqa: E402
-from sqlalchemy import create_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
-from sqlalchemy.pool import StaticPool  # noqa: E402
+import pytest
+from sqlalchemy import JSON, create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base  # noqa: E402
+from app.core.database import Base
 
 
 # ---------------------------------------------------------------------------
@@ -59,11 +52,22 @@ def engine():
 
 @pytest.fixture(scope="session")
 def tables(engine):
-    """Create all database tables except those with ARRAY (not supported by SQLite)."""
+    """Create all database tables with JSON instead of ARRAY for SQLite."""
     from app.models.events import Event
+    from app.models.settings import Setting
     from app.models.telegram import Poll
 
-    excluded_tables = {Event.__table__, Poll.__table__}
+    # Replace ARRAY with JSON for SQLite compatibility
+    for column in Event.__table__.columns:
+        if column.type.__class__.__name__ == "ARRAY":
+            column.type = JSON()
+
+    for column in Poll.__table__.columns:
+        if column.type.__class__.__name__ == "ARRAY":
+            column.type = JSON()
+
+    # Exclude only settings (has JSONB)
+    excluded_tables = {Setting.__table__}
     all_tables = set(Base.metadata.tables.values())
     tables_to_create = all_tables - excluded_tables
 
@@ -107,7 +111,6 @@ def client(db_session):
     from app.api.routes.telegram import router as telegram_router
     from app.core.database import get_db
 
-    # Create a test app without lifespan
     app = FastAPI()
     api_v1 = APIRouter(prefix="/api/v1")
     api_v1.include_router(auth_router, prefix="/auth", tags=["Authentication"])
@@ -118,7 +121,6 @@ def client(db_session):
     app.include_router(api_v1)
     app.include_router(telegram_router, tags=["Telegram"])
 
-    # Override the get_db dependency to use the test session
     def override_get_db():
         yield db_session
 

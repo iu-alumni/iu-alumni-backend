@@ -78,12 +78,15 @@ ignore = [
     "RET504", # Unnecessary assignment before return - sometimes improves readability
 
     # Timezone issues - can be addressed later if needed
+    "DTZ001",
     "DTZ003", # datetime.utcnow() used - requires larger refactor
     "DTZ005", # datetime.now() without tz - requires larger refactor
 
     # Naming conventions - be more lenient
     "N805",  # First argument of a method should be named `self` - pydantic uses `cls`
     "N806",  # Variable in function should be lowercase - sometimes uppercase is clearer
+
+    "E402",
 
     # Exception handling - too strict for practical development
     "B904",  # Within an `except` clause, raise exceptions with `raise ... from err`
