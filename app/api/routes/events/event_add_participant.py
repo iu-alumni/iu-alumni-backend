@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.events import Event
 from app.models.users import Admin, Alumni
+from app.services.badges import evaluate_for_user
 from app.services.notification_service import NotificationService
 
 
@@ -72,6 +73,15 @@ async def add_participant(
                 event_name=event.title,
                 owner_alias=owner.telegram_alias,
                 user_alias=participant.telegram_alias,
+            )
+
+        # Badge evaluation (failure-tolerant — never blocks the response).
+        try:
+            evaluate_for_user(db, participant, "event_attended")
+        except Exception as eval_err:
+            import logging
+            logging.getLogger("iu_alumni").error(
+                "badge eval failed on event_attended: %s", eval_err
             )
 
         return {"message": "Successfully joined the event"}

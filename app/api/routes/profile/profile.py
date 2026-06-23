@@ -68,4 +68,14 @@ def update_profile(
     db.commit()
     db.refresh(current_user)
 
+    # Badge eval (Pioneer, Innopolis OG, Profile Pro, Cross-city commuter).
+    try:
+        from app.services.badges import evaluate_for_user
+        evaluate_for_user(db, current_user, "profile_updated")
+    except Exception as eval_err:
+        import logging
+        logging.getLogger("iu_alumni").error(
+            "badge eval failed on profile_updated: %s", eval_err
+        )
+
     return current_user
