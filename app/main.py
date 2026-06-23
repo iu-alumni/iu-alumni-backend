@@ -118,4 +118,5 @@ api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
 app.include_router(api_v1)
 app.include_router(telegram_router, tags=["Telegram"])
 
-Instrumentator().instrument(app).expose(app)
+if not IS_DEVELOPMENT:
+    Instrumentator().instrument(app).expose(app)
