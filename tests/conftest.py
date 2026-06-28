@@ -2,6 +2,7 @@
 
 import os
 
+
 # ---------------------------------------------------------------------------
 # 1. Set required environment variables FIRST (before any app imports)
 # ---------------------------------------------------------------------------
@@ -21,13 +22,14 @@ for _key, _val in _TEST_ENV.items():
 # ---------------------------------------------------------------------------
 import dotenv
 
+
 dotenv.load_dotenv = lambda **_kwargs: None
 
 # ---------------------------------------------------------------------------
 # 3. NOW import app modules (after environment is set)
 # ---------------------------------------------------------------------------
 import pytest
-from sqlalchemy import create_engine, JSON
+from sqlalchemy import JSON, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -51,10 +53,10 @@ def engine():
 @pytest.fixture(scope="session")
 def tables(engine):
     """Create all database tables with JSON instead of ARRAY for SQLite."""
+    from app.models.badge import Badge, UserBadge
     from app.models.events import Event
     from app.models.settings import Setting
     from app.models.telegram import Poll
-    from app.models.badge import Badge, UserBadge
 
     # Replace ARRAY with JSON for SQLite compatibility
     for column in Event.__table__.columns:
