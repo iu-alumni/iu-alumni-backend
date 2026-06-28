@@ -39,3 +39,10 @@ docker compose -f docker-compose.cron.yml up
 
 Automatic on push to `develop` (testing) or `main` (production).  
 See [iu-alumni-infra](https://github.com/iu-alumni/iu-alumni-infra) for the full deployment guide and secrets reference.
+
+## Testing
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
