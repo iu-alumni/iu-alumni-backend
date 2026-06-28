@@ -2,7 +2,6 @@
 
 import os
 
-
 # ---------------------------------------------------------------------------
 # 1. Set required environment variables FIRST (before any app imports)
 # ---------------------------------------------------------------------------
@@ -22,14 +21,13 @@ for _key, _val in _TEST_ENV.items():
 # ---------------------------------------------------------------------------
 import dotenv
 
-
 dotenv.load_dotenv = lambda **_kwargs: None
 
 # ---------------------------------------------------------------------------
 # 3. NOW import app modules (after environment is set)
 # ---------------------------------------------------------------------------
 import pytest
-from sqlalchemy import JSON, create_engine
+from sqlalchemy import create_engine, JSON
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -56,6 +54,7 @@ def tables(engine):
     from app.models.events import Event
     from app.models.settings import Setting
     from app.models.telegram import Poll
+    from app.models.badge import Badge, UserBadge
 
     # Replace ARRAY with JSON for SQLite compatibility
     for column in Event.__table__.columns:
@@ -66,8 +65,12 @@ def tables(engine):
         if column.type.__class__.__name__ == "ARRAY":
             column.type = JSON()
 
-    # Exclude only settings (has JSONB)
-    excluded_tables = {Setting.__table__}
+    # Exclude tables that use PostgreSQL-specific types (JSONB, ARRAY)
+    excluded_tables = {
+        Setting.__table__,    # has JSONB
+        Badge.__table__,      # has JSONB and ARRAY
+        UserBadge.__table__,  # has JSONB
+    }
     all_tables = set(Base.metadata.tables.values())
     tables_to_create = all_tables - excluded_tables
 
