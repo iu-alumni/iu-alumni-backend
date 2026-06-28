@@ -179,3 +179,101 @@ class TestEmailService:
         )
 
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_verification_success_email_success(self, mocker):
+        """Test send_verification_success_email success."""
+        from app.services.email_service import send_verification_success_email
+        mock_fm = mocker.patch("app.services.email_service.fm")
+        mock_fm.send_message = AsyncMock()
+
+        result = await send_verification_success_email(
+            email="test@innopolis.university",
+            first_name="John"
+        )
+
+        assert result is True
+        mock_fm.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_verification_success_email_failure(self, mocker):
+        """Test send_verification_success_email failure."""
+        from app.services.email_service import send_verification_success_email
+        mock_fm = mocker.patch("app.services.email_service.fm")
+        mock_fm.send_message = AsyncMock(side_effect=Exception("SMTP error"))
+
+        result = await send_verification_success_email(
+            email="test@innopolis.university",
+            first_name="John"
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_verification_link_email_success(self, mocker):
+        """Test send_verification_link_email success."""
+        from app.services.email_service import send_verification_link_email
+        mock_fm = mocker.patch("app.services.email_service.fm")
+        mock_fm.send_message = AsyncMock()
+
+        result = await send_verification_link_email(
+            email="test@innopolis.university",
+            first_name="John",
+            verify_link="https://example.com/verify?token=abc123",
+            expiry_hours=24
+        )
+
+        assert result is True
+        mock_fm.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_verification_link_email_failure(self, mocker):
+        """Test send_verification_link_email failure."""
+        from app.services.email_service import send_verification_link_email
+        mock_fm = mocker.patch("app.services.email_service.fm")
+        mock_fm.send_message = AsyncMock(side_effect=Exception("SMTP error"))
+
+        result = await send_verification_link_email(
+            email="test@innopolis.university",
+            first_name="John",
+            verify_link="https://example.com/verify?token=abc123",
+            expiry_hours=24
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_send_telegram_verification_email_success(self, mocker):
+        """Test send_telegram_verification_email success."""
+        from app.services.email_service import send_telegram_verification_email
+        mock_fm = mocker.patch("app.services.email_service.fm")
+        mock_fm.send_message = AsyncMock()
+
+        result = await send_telegram_verification_email(
+            email="test@innopolis.university",
+            first_name="John",
+            telegram_alias="@telegramuser",
+            verify_link="https://example.com/verify?token=abc123",
+            expiry_hours=24
+        )
+
+        assert result is True
+        mock_fm.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_telegram_verification_email_failure(self, mocker):
+        """Test send_telegram_verification_email failure."""
+        from app.services.email_service import send_telegram_verification_email
+        mock_fm = mocker.patch("app.services.email_service.fm")
+        mock_fm.send_message = AsyncMock(side_effect=Exception("SMTP error"))
+
+        result = await send_telegram_verification_email(
+            email="test@innopolis.university",
+            first_name="John",
+            telegram_alias="@telegramuser",
+            verify_link="https://example.com/verify?token=abc123",
+            expiry_hours=24
+        )
+
+        assert result is False
+
