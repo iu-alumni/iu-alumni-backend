@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -15,8 +15,12 @@ router = APIRouter()
 @router.get("/all", response_model=Paginated[ProfileListItem])
 def get_profiles(
     search: str | None = Query(None, description="Search by name"),
-    location: str | None = Query(None, description="Filter by exact location string, e.g. 'Russia, Innopolis'"),
-    cursor: str | None = Query(None, description="Pagination cursor from previous response"),
+    location: str | None = Query(
+        None, description="Filter by exact location string, e.g. 'Russia, Innopolis'"
+    ),
+    cursor: str | None = Query(
+        None, description="Pagination cursor from previous response"
+    ),
     limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: Alumni | Admin = Depends(get_current_user),
@@ -43,8 +47,13 @@ def get_profiles(
         )
 
     if location:
-        # ix_alumni_location B-tree index makes this an index seek.
-        query = query.filter(Alumni.location == location)
+        # Keep city-detail lists aligned with /profile/map pin counts.
+        query = query.filter(
+            func.lower(Alumni.location) == location.lower(),
+            Alumni.show_location.is_(True),
+            Alumni.is_verified.is_(True),
+            Alumni.is_banned.is_(False),
+        )
 
     if cursor:
         c = decode_cursor(cursor)

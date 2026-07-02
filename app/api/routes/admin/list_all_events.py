@@ -6,14 +6,14 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.events import Event
 from app.models.users import Admin, Alumni
-from app.schemas.event import EventListItem
+from app.schemas.event import AdminEventListItem
 from app.schemas.pagination import Paginated, decode_cursor, encode_cursor
 
 
 router = APIRouter()
 
 
-@router.get("/events", response_model=Paginated[EventListItem])
+@router.get("/events", response_model=Paginated[AdminEventListItem])
 async def list_events(
     search: str | None = Query(None, description="Search by event title"),
     cursor: str | None = Query(None, description="Pagination cursor from previous response"),
