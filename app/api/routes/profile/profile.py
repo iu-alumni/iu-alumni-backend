@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -8,6 +8,16 @@ from app.schemas.profile import ProfileResponse, ProfileUpdateRequest
 
 
 router = APIRouter()
+
+
+def _clean_required_name(value: str, field_name: str) -> str:
+    cleaned = value.strip()
+    if not cleaned:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{field_name} is required",
+        )
+    return cleaned
 
 
 @router.get("/me", response_model=ProfileResponse)
@@ -39,10 +49,14 @@ def update_profile(
         )
     # Update fields if provided
     if profile_data.first_name is not None:
-        current_user.first_name = profile_data.first_name
+        current_user.first_name = _clean_required_name(
+            profile_data.first_name, "First name"
+        )
 
     if profile_data.last_name is not None:
-        current_user.last_name = profile_data.last_name
+        current_user.last_name = _clean_required_name(
+            profile_data.last_name, "Last name"
+        )
 
     if profile_data.graduation_year is not None:
         current_user.graduation_year = profile_data.graduation_year
@@ -63,7 +77,7 @@ def update_profile(
             current_user.is_telegram_verified = False
 
     if profile_data.avatar is not None:
-        current_user.avatar = profile_data.avatar
+        current_user.avatar = profile_data.avatar or None
 
     db.commit()
     db.refresh(current_user)

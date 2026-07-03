@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 import os
 import random
 import secrets
@@ -12,6 +13,7 @@ from app.models.users import Alumni
 
 
 VERIFICATION_LINK_EXPIRY_HOURS = int(os.getenv("VERIFICATION_LINK_EXPIRY_HOURS", "24"))
+logger = logging.getLogger("iu_alumni.verification_service")
 
 
 def generate_verification_code() -> str:
@@ -39,6 +41,11 @@ def create_link_verification_record(
     )
 
     if existing:
+        logger.info(
+            "Refreshing verification link record for alumni_id=%s expires_in_hours=%s",
+            alumni_id,
+            VERIFICATION_LINK_EXPIRY_HOURS,
+        )
         existing.verification_token = token
         existing.verification_token_expires = expires
         existing.verification_requested_at = now
@@ -58,6 +65,11 @@ def create_link_verification_record(
     db.add(record)
     db.commit()
     db.refresh(record)
+    logger.info(
+        "Created verification link record for alumni_id=%s expires_in_hours=%s",
+        alumni_id,
+        VERIFICATION_LINK_EXPIRY_HOURS,
+    )
     return record, token
 
 
@@ -195,11 +207,18 @@ def admin_verify_user(db: Session, email: str) -> tuple[bool, str]:
 
 def can_resend_verification(db: Session, email: str) -> tuple[bool, str, str | None]:
     """Check if user can request a new verification link."""
+    logger.info("Checking resend verification eligibility for email=%s", email)
     alumni = db.query(Alumni).filter(Alumni.email == email).first()
     if not alumni:
+        logger.warning("Resend verification eligibility failed: user not found email=%s", email)
         return False, "User not found", None
 
     if alumni.is_verified:
+        logger.info(
+            "Resend verification eligibility failed: already verified user_id=%s email=%s",
+            alumni.id,
+            alumni.email,
+        )
         return False, "User already verified", None
 
     verification = (
@@ -212,12 +231,24 @@ def can_resend_verification(db: Session, email: str) -> tuple[bool, str, str | N
         time_since_last_request = datetime.utcnow() - verification.verification_requested_at
         if time_since_last_request < timedelta(seconds=60):
             seconds_to_wait = 60 - time_since_last_request.total_seconds()
+            logger.info(
+                "Resend verification rate-limited: user_id=%s email=%s seconds_left=%s last_request_at=%s",
+                alumni.id,
+                alumni.email,
+                int(seconds_to_wait),
+                verification.verification_requested_at,
+            )
             return (
                 False,
                 f"Please wait {int(seconds_to_wait)} seconds before requesting a new link",
                 None,
             )
 
+    logger.info(
+        "Resend verification eligibility passed: user_id=%s email=%s",
+        alumni.id,
+        alumni.email,
+    )
     return True, "Can resend", alumni.id
 
 
@@ -242,4 +273,3 @@ def admin_unverify_user(db: Session, email: str) -> tuple[bool, str]:
 
     db.commit()
     return True, "User unverified successfully"
-

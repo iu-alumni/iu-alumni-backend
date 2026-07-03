@@ -39,6 +39,12 @@ class EventListItem(BaseModel):
     approved: bool | None = None
 
 
+class AdminEventListItem(EventListItem):
+    """Admin event list item — includes cover for thumbnail display."""
+
+    cover: str | None = None
+
+
 class CreateEventRequest(BaseModel):
     title: str
     description: str

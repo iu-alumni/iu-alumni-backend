@@ -46,6 +46,11 @@ async def send_login_code_email(
 ) -> bool:
     """Send 2FA login code email."""
     try:
+        logger.info(
+            "Preparing login code email to %s with expiry_minutes=%s",
+            email,
+            expiry_minutes,
+        )
         message = MessageSchema(
             subject="IU Alumni — Your login code",
             recipients=[email],
@@ -57,6 +62,7 @@ async def send_login_code_email(
             subtype=MessageType.html,
         )
         await fm.send_message(message, template_name="login_code.html")
+        logger.info("Login code email sent successfully to %s", email)
         return True
     except Exception:
         logger.exception("Failed to send login code email to %s", email)
@@ -68,6 +74,11 @@ async def send_password_reset_email(
 ) -> bool:
     """Send password reset link email."""
     try:
+        logger.info(
+            "Preparing password reset email to %s with expiry_minutes=%s",
+            email,
+            expiry_minutes,
+        )
         message = MessageSchema(
             subject="IU Alumni — Reset your password",
             recipients=[email],
@@ -79,6 +90,7 @@ async def send_password_reset_email(
             subtype=MessageType.html,
         )
         await fm.send_message(message, template_name="password_reset.html")
+        logger.info("Password reset email sent successfully to %s", email)
         return True
     except Exception:
         logger.exception("Failed to send password reset email to %s", email)
@@ -132,6 +144,11 @@ async def send_manual_verification_notification(
         bool: True if email sent successfully, False otherwise
     """
     try:
+        logger.info(
+            "Preparing manual verification notification to admin=%s for user_email=%s",
+            admin_email,
+            user_email,
+        )
         message = MessageSchema(
             subject="Manual Verification Request — IU Alumni",
             recipients=[admin_email],
@@ -142,6 +159,10 @@ async def send_manual_verification_notification(
             subtype=MessageType.html,
         )
         await fm.send_message(message, template_name="manual_verification.html")
+        logger.info(
+            "Manual verification notification email sent successfully to admin=%s",
+            admin_email,
+        )
         return True
     except Exception:
         logger.exception("Failed to send admin notification to %s", admin_email)
@@ -160,6 +181,7 @@ async def send_verification_success_email(email: EmailStr, first_name: str) -> b
         bool: True if email sent successfully, False otherwise
     """
     try:
+        logger.info("Preparing verification success email to %s", email)
         message = MessageSchema(
             subject="Account Verified — IU Alumni Platform",
             recipients=[email],
@@ -167,6 +189,7 @@ async def send_verification_success_email(email: EmailStr, first_name: str) -> b
             subtype=MessageType.html,
         )
         await fm.send_message(message, template_name="verification_success.html")
+        logger.info("Verification success email sent successfully to %s", email)
         return True
     except Exception:
         logger.exception("Failed to send verification success email to %s", email)
@@ -178,6 +201,11 @@ async def send_verification_link_email(
 ) -> bool:
     """Send link-based registration email verification."""
     try:
+        logger.info(
+            "Preparing verification link email to %s with expiry_hours=%s",
+            email,
+            expiry_hours,
+        )
         message = MessageSchema(
             subject="Verify your IU Alumni account",
             recipients=[email],
@@ -201,6 +229,12 @@ async def send_telegram_verification_email(
 ) -> bool:
     """Send link-based Telegram account verification email."""
     try:
+        logger.info(
+            "Preparing Telegram verification email to %s alias=%s expiry_hours=%s",
+            email,
+            telegram_alias,
+            expiry_hours,
+        )
         message = MessageSchema(
             subject="Confirm your Telegram account — IU Alumni",
             recipients=[email],

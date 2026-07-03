@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+import logging
 import os
 import uuid
 
@@ -21,6 +22,7 @@ from app.services.verification_service import generate_verification_code
 
 
 router = APIRouter()
+logger = logging.getLogger("iu_alumni.auth.login_telegram_otp")
 
 LOGIN_CODE_EXPIRY_MINUTES = int(os.getenv("LOGIN_CODE_EXPIRY_MINUTES", "10"))
 OTP_COOLDOWN_SECONDS = 60
@@ -37,22 +39,41 @@ async def login_telegram_request(request: TelegramLoginRequest, db: Session = De
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
 
     if not user:
+        logger.warning(
+            "Telegram OTP request rejected: account not found for email=%s", request.email
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No account found with this email",
         )
 
     if not user.is_verified:
+        logger.warning(
+            "Telegram OTP request rejected: account not verified user_id=%s email=%s",
+            user.id,
+            user.email,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account not verified"
         )
 
     if user.is_banned:
+        logger.warning(
+            "Telegram OTP request rejected: account banned user_id=%s email=%s",
+            user.id,
+            user.email,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is banned"
         )
 
     if not user.is_telegram_verified:
+        logger.warning(
+            "Telegram OTP request rejected: telegram not verified user_id=%s email=%s alias=%s",
+            user.id,
+            user.email,
+            user.telegram_alias,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Telegram not verified for this account. Please verify your Telegram account via your profile settings.",
@@ -64,6 +85,12 @@ async def login_telegram_request(request: TelegramLoginRequest, db: Session = De
         .first()
     )
     if not tg_user:
+        logger.warning(
+            "Telegram OTP request rejected: alias has no bot chat user_id=%s email=%s alias=%s",
+            user.id,
+            user.email,
+            user.telegram_alias,
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Telegram bot not started. Please open the bot and send /start first.",
@@ -79,14 +106,27 @@ async def login_telegram_request(request: TelegramLoginRequest, db: Session = De
     )
     if recent and (now - recent.created_at) < timedelta(seconds=OTP_COOLDOWN_SECONDS):
         seconds_left = OTP_COOLDOWN_SECONDS - int((now - recent.created_at).total_seconds())
+        logger.info(
+            "Telegram OTP rate-limited: user_id=%s email=%s seconds_left=%s last_created_at=%s",
+            user.id,
+            user.email,
+            seconds_left,
+            recent.created_at,
+        )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Please wait {seconds_left} seconds before requesting a new code",
         )
 
-    db.query(LoginCode).filter(
+    invalidated_count = db.query(LoginCode).filter(
         LoginCode.alumni_id == user.id, LoginCode.used.is_(False)
     ).delete()
+    logger.info(
+        "Telegram OTP cleanup: user_id=%s email=%s invalidated_unused_codes=%s",
+        user.id,
+        user.email,
+        invalidated_count,
+    )
 
     code = generate_verification_code()
     session_token = str(uuid.uuid4())
@@ -102,6 +142,13 @@ async def login_telegram_request(request: TelegramLoginRequest, db: Session = De
         attempts=0,
     ))
     db.commit()
+    logger.info(
+        "Telegram OTP code persisted: user_id=%s email=%s session_token=%s expires_at=%s",
+        user.id,
+        user.email,
+        session_token,
+        now + timedelta(minutes=LOGIN_CODE_EXPIRY_MINUTES),
+    )
 
     sent = await telegram_service.send_login_code(
         chat_id=tg_user.chat_id,
@@ -111,10 +158,24 @@ async def login_telegram_request(request: TelegramLoginRequest, db: Session = De
     )
 
     if not sent:
+        logger.error(
+            "Telegram OTP send failed: user_id=%s email=%s alias=%s session_token=%s",
+            user.id,
+            user.email,
+            user.telegram_alias,
+            session_token,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to send Telegram code. Please try again later.",
         )
+    logger.info(
+        "Telegram OTP send succeeded: user_id=%s email=%s alias=%s session_token=%s",
+        user.id,
+        user.email,
+        user.telegram_alias,
+        session_token,
+    )
 
     return LoginInitResponse(
         session_token=session_token,
@@ -132,6 +193,10 @@ def login_telegram_verify(request: TelegramVerifyRequest, db: Session = Depends(
     )
 
     if not login_code or login_code.used:
+        logger.warning(
+            "Telegram OTP verify rejected: invalid/used session_token=%s",
+            request.session_token,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired session",
@@ -139,6 +204,13 @@ def login_telegram_verify(request: TelegramVerifyRequest, db: Session = Depends(
 
     now = datetime.now(UTC).replace(tzinfo=None)
     if login_code.expires_at < now:
+        logger.warning(
+            "Telegram OTP verify rejected: expired session_token=%s alumni_id=%s expires_at=%s now=%s",
+            request.session_token,
+            login_code.alumni_id,
+            login_code.expires_at,
+            now,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Verification code has expired",
@@ -147,6 +219,12 @@ def login_telegram_verify(request: TelegramVerifyRequest, db: Session = Depends(
     if login_code.attempts >= OTP_MAX_ATTEMPTS:
         login_code.used = True
         db.commit()
+        logger.warning(
+            "Telegram OTP verify blocked: max attempts session_token=%s alumni_id=%s attempts=%s",
+            request.session_token,
+            login_code.alumni_id,
+            login_code.attempts,
+        )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many incorrect attempts. Please request a new code",
@@ -156,6 +234,13 @@ def login_telegram_verify(request: TelegramVerifyRequest, db: Session = Depends(
         login_code.attempts += 1
         db.commit()
         remaining = OTP_MAX_ATTEMPTS - login_code.attempts
+        logger.warning(
+            "Telegram OTP verify failed: wrong code session_token=%s alumni_id=%s attempts=%s remaining=%s",
+            request.session_token,
+            login_code.alumni_id,
+            login_code.attempts,
+            remaining,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Incorrect verification code. {remaining} attempt(s) remaining",
@@ -163,6 +248,11 @@ def login_telegram_verify(request: TelegramVerifyRequest, db: Session = Depends(
 
     login_code.used = True
     db.commit()
+    logger.info(
+        "Telegram OTP verify succeeded: session_token=%s alumni_id=%s",
+        request.session_token,
+        login_code.alumni_id,
+    )
 
     user = login_code.alumni
     access_token = create_access_token(
