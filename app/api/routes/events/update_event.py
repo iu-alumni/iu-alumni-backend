@@ -71,7 +71,7 @@ async def update_event(
         event.is_online = event_data.is_online
         changes["is_online"] = event_data.is_online
 
-    if event_data.cover is not None:
+    if "cover" in event_data.model_fields_set:
         event.cover = event_data.cover
 
     # Commit changes

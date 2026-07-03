@@ -9,6 +9,7 @@ from app.schemas.auth import (
     PasswordResetConfirmSchema,
     RegisterRequest,
 )
+from app.schemas.event import CreateEventRequest, UpdateEventRequest
 
 
 class TestAuthSchemas:
@@ -316,3 +317,52 @@ class TestAuthSchemas:
         response = TokenResponse(**data)
         assert response.access_token == "token123"
         assert response.token_type == "bearer"
+
+
+class TestEventSchemas:
+    """Test cases for event schemas."""
+
+    def test_create_event_rejects_blank_required_text(self):
+        """Test CreateEventRequest rejects whitespace-only text fields."""
+        data = {
+            "title": "   ",
+            "description": "Description",
+            "location": "Room 101",
+            "datetime": "2025-01-01T10:00:00",
+            "cost": 0,
+            "is_online": False,
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            CreateEventRequest(**data)
+        assert "title" in str(exc_info.value)
+
+    def test_create_event_trims_text_and_normalizes_empty_cover(self):
+        """Test CreateEventRequest trims text fields and treats blank cover as absent."""
+        request = CreateEventRequest(
+            title="  Workshop  ",
+            description="  Learn things  ",
+            location="  Room 101  ",
+            datetime="2025-01-01T10:00:00",
+            cost=0,
+            is_online=False,
+            cover="",
+        )
+
+        assert request.title == "Workshop"
+        assert request.description == "Learn things"
+        assert request.location == "Room 101"
+        assert request.cover is None
+
+    def test_update_event_rejects_blank_required_text_when_present(self):
+        """Test UpdateEventRequest rejects blank editable text fields."""
+        with pytest.raises(ValidationError) as exc_info:
+            UpdateEventRequest(description="  ")
+        assert "description" in str(exc_info.value)
+
+    def test_update_event_normalizes_empty_cover(self):
+        """Test UpdateEventRequest uses blank cover as an explicit clear request."""
+        request = UpdateEventRequest(cover="")
+
+        assert request.cover is None
+        assert "cover" in request.model_fields_set

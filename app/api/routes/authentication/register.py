@@ -1,10 +1,11 @@
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_password_hash, get_random_token
+from app.core.url_utils import build_absolute_url
 from app.models.users import Admin, Alumni
 from app.schemas.auth import RegisterRequest
 from app.services.email_hash_service import is_email_allowed
@@ -31,6 +32,7 @@ router = APIRouter()
 async def register(
     request: RegisterRequest,
     background_tasks: BackgroundTasks,
+    http_request: Request,
     db: Session = Depends(get_db),
 ):
     """
@@ -70,7 +72,11 @@ async def register(
     if email_allowed and not request.manual_verification:
         # Auto verification: send confirmation link
         _, token = create_link_verification_record(db, new_user.id)
-        verify_url = f"{BACKEND_URL}/api/v1/auth/verify?token={token}"
+        verify_url = build_absolute_url(
+            f"/api/v1/auth/verify?token={token}",
+            request=http_request,
+            configured_base=BACKEND_URL,
+        )
         logger.info(f"Sending verification link to {new_user.email}")
         email_sent = await send_verification_link_email(
             new_user.email, new_user.first_name, verify_url

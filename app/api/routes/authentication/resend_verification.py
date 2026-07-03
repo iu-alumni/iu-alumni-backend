@@ -1,10 +1,11 @@
 import logging
 import os
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.url_utils import build_absolute_url
 from app.models.users import Alumni
 from app.schemas.auth import ResendVerificationRequest
 from app.services.email_service import send_verification_link_email
@@ -23,7 +24,7 @@ router = APIRouter()
 @router.post("/resend-verification", status_code=status.HTTP_200_OK)
 async def resend_verification_link(
     request: ResendVerificationRequest,
-    background_tasks: BackgroundTasks,
+    http_request: Request,
     db: Session = Depends(get_db),
 ):
     """
@@ -49,7 +50,11 @@ async def resend_verification_link(
         )
 
     _, token = create_link_verification_record(db, user.id)
-    verify_url = f"{BACKEND_URL}/api/v1/auth/verify?token={token}"
+    verify_url = build_absolute_url(
+        f"/api/v1/auth/verify?token={token}",
+        request=http_request,
+        configured_base=BACKEND_URL,
+    )
     logger.info(
         "Resend verification token issued: user_id=%s email=%s verification_url_base=%s",
         user.id,
@@ -57,14 +62,18 @@ async def resend_verification_link(
         BACKEND_URL,
     )
 
-    background_tasks.add_task(
-        send_verification_link_email,
+    email_sent = await send_verification_link_email(
         user.email,
         user.first_name,
         verify_url,
     )
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification email. Please try again later.",
+        )
     logger.info(
-        "Resend verification email scheduled in background: user_id=%s email=%s",
+        "Resend verification email sent: user_id=%s email=%s",
         user.id,
         user.email,
     )
