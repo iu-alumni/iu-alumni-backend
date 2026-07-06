@@ -233,15 +233,24 @@ def _should_award(
 
 
 def _award(
-    db: Session, alumni_id: str, badge: Badge, extra: dict | None = None
+    db: Session,
+    alumni_id: str,
+    badge: Badge,
+    extra: dict | None = None,
+    awarded_by: str | None = None,
 ) -> UserBadge | None:
-    """Insert a UserBadge row. Idempotent on (alumni_id, badge_id, extra)."""
+    """Insert a UserBadge row. Idempotent on (alumni_id, badge_id, extra).
+
+    `awarded_by` records the admin id for manual awards; leave None for
+    the auto-evaluator so the row keeps its "system-awarded" meaning.
+    """
     row = UserBadge(
         id=str(uuid.uuid4()),
         alumni_id=alumni_id,
         badge_id=badge.id,
         awarded_at=datetime.utcnow(),
         extra=extra or {},
+        awarded_by=awarded_by,
     )
     db.add(row)
     try:
@@ -506,3 +515,70 @@ def mark_seen(db: Session, alumni: Alumni, badge_code: str) -> bool:
         r.seen_at = datetime.utcnow()
     db.commit()
     return bool(rows)
+
+
+# ─────────────────────────── manual admin actions ──────────────────────────
+
+
+class ManualAwardError(Exception):
+    """Raised for a manual-award / manual-revoke pre-condition failure.
+
+    The message is safe to surface as a 4xx response body.
+    """
+
+
+def manual_award(
+    db: Session,
+    alumni: Alumni,
+    badge_code: str,
+    admin_id: str,
+    metadata: dict | None = None,
+) -> UserBadge:
+    """Insert a UserBadge row for the given code on behalf of an admin.
+
+    Raises ManualAwardError if the badge doesn't exist or the row is a
+    duplicate (idempotent uniqueness constraint hit).
+    """
+    badge = db.query(Badge).filter(Badge.code == badge_code).first()
+    if badge is None:
+        raise ManualAwardError(f"badge '{badge_code}' does not exist")
+
+    row = _award(db, alumni.id, badge, metadata, awarded_by=admin_id)
+    if row is None:
+        raise ManualAwardError(
+            f"badge '{badge_code}' already awarded to this user with the same metadata"
+        )
+    db.commit()
+    return row
+
+
+def manual_revoke(
+    db: Session,
+    alumni: Alumni,
+    badge_code: str,
+    metadata: dict | None = None,
+) -> Badge:
+    """Delete the matching UserBadge row for `badge_code` (+ optional metadata).
+
+    Raises ManualAwardError if the badge doesn't exist or the user doesn't
+    hold it. Returns the Badge for the caller to include in the response.
+    """
+    badge = db.query(Badge).filter(Badge.code == badge_code).first()
+    if badge is None:
+        raise ManualAwardError(f"badge '{badge_code}' does not exist")
+
+    q = db.query(UserBadge).filter(
+        UserBadge.alumni_id == alumni.id, UserBadge.badge_id == badge.id
+    )
+    if metadata is not None:
+        q = q.filter(UserBadge.extra == metadata)
+    rows = q.all()
+    if not rows:
+        raise ManualAwardError(
+            f"user does not hold badge '{badge_code}'"
+            + (f" with metadata {metadata}" if metadata else "")
+        )
+    for r in rows:
+        db.delete(r)
+    db.commit()
+    return badge
