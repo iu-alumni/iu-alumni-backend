@@ -255,6 +255,63 @@ def _award(
 # ─────────────────────────── public API ────────────────────────────────────
 
 
+# Strategies whose criteria are one-way / historical / externally-owned.
+# Even if `_should_award` returns False now (e.g. a user edits their profile
+# and the raw signal disappears), we KEEP these badges. They represent a
+# moment in time or an admin decision, not an ongoing condition.
+_NON_REVOCABLE_STRATEGIES = {
+    "first_n",           # Pioneer — "first 100 to pin location" is historical
+    "per_city_first",    # Founding Host — first event in a city is historical
+    "leaderboard",       # Local Legend — awarded annually, historical
+    "manual",            # OSS Contributor / Suggestion Box — admin choice
+    "year_range",        # Innopolis OG — graduation year is a lifetime fact
+}
+
+
+def revoke_ineligible(db: Session, alumni: Alumni) -> list[str]:
+    """Delete any of the alumnus's badges whose criteria no longer hold.
+
+    Only touches badges whose strategy is revocable (count-based, distinct-
+    count, profile completeness, badge count). Historical / lifetime badges
+    listed in `_NON_REVOCABLE_STRATEGIES` are preserved even if the raw
+    signal isn't there anymore.
+
+    Cascades: if revoking a badge drops the total count below Badge
+    Collector's threshold, Badge Collector is revoked too. Loop is bounded
+    at 3 rounds to prevent runaway.
+
+    Returns the list of revoked badge codes.
+    """
+    revoked: list[str] = []
+    for _round in range(3):
+        did_revoke = False
+        awarded = (
+            db.query(UserBadge, Badge)
+            .join(Badge, Badge.id == UserBadge.badge_id)
+            .filter(UserBadge.alumni_id == alumni.id)
+            .all()
+        )
+        for ub, b in awarded:
+            if b.strategy in _NON_REVOCABLE_STRATEGIES:
+                continue
+            try:
+                should_keep, _extra = _should_award(db, alumni, b)
+                if not should_keep:
+                    db.delete(ub)
+                    # Flush so subsequent checks in this round (e.g. Badge
+                    # Collector's count query) see the deletion.
+                    db.flush()
+                    revoked.append(b.code)
+                    did_revoke = True
+            except Exception as e:
+                logger.error("badge revoke check failed for %s: %s", b.code, e)
+        if did_revoke:
+            db.commit()
+        else:
+            break
+    return revoked
+
+
 def evaluate_for_user(
     db: Session, alumni: Alumni, trigger: str, context: dict | None = None
 ) -> list[UserBadge]:
