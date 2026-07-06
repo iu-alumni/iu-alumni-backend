@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.routes.admin import (
     approve_event,
     badges_award,
+    badges_recompute_leaderboards,
     badges_revoke,
     ban,
     decline_event,
@@ -36,3 +37,4 @@ router.include_router(upload_allowed_emails.router)
 router.include_router(email_diagnostic.router)
 router.include_router(badges_award.router)
 router.include_router(badges_revoke.router)
+router.include_router(badges_recompute_leaderboards.router)
