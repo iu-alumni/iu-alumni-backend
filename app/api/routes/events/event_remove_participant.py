@@ -60,6 +60,24 @@ async def remove_participant(
     try:
         db.commit()
         db.refresh(event)
+
+        # Revoke any of the leaving participant's badges whose criteria no
+        # longer hold (Networker, Cross-city commuter, etc.) plus a cascade
+        # check for the event owner (Rainmaker if attendance dropped below
+        # 20). Failure-tolerant — never blocks the leave response.
+        try:
+            from app.services.badges import revoke_ineligible
+
+            revoke_ineligible(db, participant)
+            owner = db.query(Alumni).filter(Alumni.id == event.owner_id).first()
+            if owner is not None and owner.id != participant.id:
+                revoke_ineligible(db, owner)
+        except Exception as revoke_err:
+            import logging
+            logging.getLogger("iu_alumni").error(
+                "badge revocation failed on event_left: %s", revoke_err
+            )
+
         return {"message": "Successfully left the event"}
     except Exception as e:
         db.rollback()
