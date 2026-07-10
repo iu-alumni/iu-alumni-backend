@@ -55,11 +55,16 @@ def tables(engine):
     """Create all database tables with JSON instead of ARRAY for SQLite."""
     from app.models.badge import Badge, UserBadge
     from app.models.events import Event
+    from app.models.projects import Project
     from app.models.settings import Setting
     from app.models.telegram import Poll
 
     # Replace ARRAY with JSON for SQLite compatibility
     for column in Event.__table__.columns:
+        if column.type.__class__.__name__ == "ARRAY":
+            column.type = JSON()
+
+    for column in Project.__table__.columns:
         if column.type.__class__.__name__ == "ARRAY":
             column.type = JSON()
 
@@ -113,6 +118,7 @@ def client(db_session):
     from app.api.routes.cities import router as cities_router
     from app.api.routes.events import router as events_router
     from app.api.routes.profile import router as profile_router
+    from app.api.routes.projects import router as projects_router
     from app.api.routes.telegram import router as telegram_router
     from app.core.database import get_db
 
@@ -123,6 +129,7 @@ def client(db_session):
     api_v1.include_router(events_router, prefix="/events", tags=["Events"])
     api_v1.include_router(admin_router, prefix="/admin", tags=["Admin"])
     api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
+    api_v1.include_router(projects_router, prefix="/projects", tags=["Projects"])
     app.include_router(api_v1)
     app.include_router(telegram_router, tags=["Telegram"])
 
