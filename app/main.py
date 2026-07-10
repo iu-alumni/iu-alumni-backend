@@ -14,6 +14,7 @@ from app.api.routes.badges import router as badges_router
 from app.api.routes.cities import router as cities_router
 from app.api.routes.events import router as events_router
 from app.api.routes.profile import router as profile_router
+from app.api.routes.projects import router as projects_router
 from app.api.routes.telegram import router as telegram_router
 from app.core.database import SessionLocal
 from app.core.logging import app_logger, setup_logging
@@ -117,6 +118,7 @@ api_v1.include_router(events_router, prefix="/events", tags=["Events"])
 api_v1.include_router(admin_router, prefix="/admin", tags=["Admin"])
 api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
 api_v1.include_router(badges_router, prefix="/badges", tags=["Badges"])
+api_v1.include_router(projects_router, prefix="/projects", tags=["Projects"])
 app.include_router(api_v1)
 app.include_router(telegram_router, tags=["Telegram"])
 
