@@ -9,6 +9,12 @@ from app.api.routes.authentication.register import register
 from app.schemas.auth import RegisterRequest
 
 
+def _http_request(base_url: str = "https://api.example.test/"):
+    request = MagicMock()
+    request.base_url = base_url
+    return request
+
+
 class TestRegister:
     """Test cases for user registration."""
 
@@ -25,7 +31,7 @@ class TestRegister:
         mock_record = MagicMock()
         mock_create_link_verification_record.return_value = (mock_record, "test_token")
 
-        mocker.patch(
+        mock_send_verification_link_email = mocker.patch(
             "app.api.routes.authentication.register.send_verification_link_email",
             return_value=True,
         )
@@ -40,7 +46,12 @@ class TestRegister:
         )
 
         background_tasks = MagicMock()
-        result = await register(request, background_tasks, db_session)
+        result = await register(
+            request,
+            background_tasks,
+            _http_request(),
+            db_session,
+        )
 
         assert result["message"] == "Registration successful. Please check your email for a confirmation link."
         assert result["email"] == "john.doe@innopolis.university"
@@ -58,6 +69,11 @@ class TestRegister:
         assert user.is_banned is False
         assert user.hashed_password == "hashed_password"
         assert user.is_verified is False
+        mock_send_verification_link_email.assert_awaited_once_with(
+            "john.doe@innopolis.university",
+            "John",
+            "https://api.example.test/api/v1/auth/verify?token=test_token",
+        )
 
     @pytest.mark.asyncio
     async def test_register_email_already_exists(self, db_session):
@@ -87,7 +103,12 @@ class TestRegister:
         background_tasks = MagicMock()
 
         with pytest.raises(HTTPException) as exc_info:
-            await register(request, background_tasks, db_session)
+            await register(
+                request,
+                background_tasks,
+                _http_request(),
+                db_session,
+            )
 
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == "Email already registered"
@@ -117,7 +138,12 @@ class TestRegister:
         )
 
         background_tasks = MagicMock()
-        result = await register(request, background_tasks, db_session)
+        result = await register(
+            request,
+            background_tasks,
+            _http_request(),
+            db_session,
+        )
 
         assert result["message"] == (
             "Registration successful. Your email is not in our graduates list. "

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 import dateutil.parser
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 
 class CoverResponse(BaseModel):
@@ -46,13 +46,30 @@ class AdminEventListItem(EventListItem):
 
 
 class CreateEventRequest(BaseModel):
-    title: str
-    description: str
-    location: str
+    title: str = Field(..., min_length=1)
+    description: str = Field(..., min_length=1)
+    location: str = Field(..., min_length=1)
     datetime: datetime
     cost: float
     is_online: bool
     cover: str | None = None
+
+    @field_validator("title", "description", "location", mode="before")
+    @classmethod
+    def validate_required_text(cls, value: str) -> str:
+        if not isinstance(value, str):
+            raise ValueError("Field must be text")
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Field cannot be blank")
+        return stripped
+
+    @field_validator("cover", mode="before")
+    @classmethod
+    def normalize_cover(cls, value: str | None) -> str | None:
+        if value == "":
+            return None
+        return value
 
 
 class CreateEventResponse(BaseModel):
@@ -67,6 +84,25 @@ class UpdateEventRequest(BaseModel):
     cost: float | None = None
     is_online: bool | None = None
     cover: str | None = None
+
+    @field_validator("title", "description", "location", mode="before")
+    @classmethod
+    def validate_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            raise ValueError("Field must be text")
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("Field cannot be blank")
+        return stripped
+
+    @field_validator("cover", mode="before")
+    @classmethod
+    def normalize_cover(cls, value: str | None) -> str | None:
+        if value == "":
+            return None
+        return value
 
     def __init__(self, **data):
         if (

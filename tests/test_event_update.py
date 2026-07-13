@@ -334,6 +334,45 @@ async def test_update_event_cover(db_session):
 
 
 @pytest.mark.asyncio
+async def test_update_event_clears_cover(db_session):
+    user = Alumni(
+        id="user123",
+        email="user@innopolis.university",
+        first_name="Test",
+        last_name="User",
+        graduation_year="2025"
+    )
+    db_session.add(user)
+
+    event = Event(
+        id="event123",
+        title="Test Event",
+        description="Description",
+        owner_id="user123",
+        location="Room 101",
+        datetime=datetime(2025, 1, 1, 10, 0, 0),
+        cost=0.0,
+        is_online=False,
+        participants_ids=[],
+        approved=True,
+        cover="https://example.com/image.jpg"
+    )
+    db_session.add(event)
+    db_session.commit()
+
+    request = UpdateEventRequest(cover="")
+
+    result = await update_event(
+        event_id="event123",
+        event_data=request,
+        db=db_session,
+        current_user=user
+    )
+
+    assert result.cover is None
+
+
+@pytest.mark.asyncio
 async def test_update_event_admin_success(db_session):
     admin = Admin(
         id="admin123",
