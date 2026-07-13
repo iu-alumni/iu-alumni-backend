@@ -6,8 +6,10 @@ from app.api.routes.admin import (
     decline_event,
     email_diagnostic,
     list_all_events,
+    list_all_projects,
     list_banned,
     list_users,
+    projects_approve,
     settings,
     unapprove_event,
     unban,
@@ -32,3 +34,5 @@ router.include_router(unverify_user.router)
 router.include_router(list_users.router)
 router.include_router(upload_allowed_emails.router)
 router.include_router(email_diagnostic.router)
+router.include_router(list_all_projects.router)
+router.include_router(projects_approve.router)
