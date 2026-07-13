@@ -582,3 +582,82 @@ def manual_revoke(
         db.delete(r)
     db.commit()
     return badge
+
+
+# ─────────────────────────── leaderboard (Local Legend) ────────────────────
+
+
+def compute_local_legend_winners(
+    db: Session, year: int
+) -> list[UserBadge]:
+    """Compute Local Legend winners for the given year.
+
+    For each city (normalized `event.location` lowercased + trimmed)
+    that had approved events in the year, find the alumni with the
+    highest attendance count. Ties broken deterministically by the
+    earliest `event.datetime` among that alumni's attended events in
+    that city.
+
+    Idempotent: relies on the `(alumni_id, badge_id, extra)` unique
+    constraint to avoid double-awards on re-run.
+
+    Future improvement: introduce an FK from `events.city_id` to the
+    `cities` table so this is a clean SQL join instead of Python-side
+    grouping on a lower/trim of a free-text column.
+    """
+    badge = db.query(Badge).filter(Badge.code == "local_legend").first()
+    if badge is None:
+        logger.warning("compute_local_legend_winners: Local Legend badge not seeded")
+        return []
+
+    year_start = datetime(year, 1, 1)
+    year_end = datetime(year + 1, 1, 1)
+    events = (
+        db.query(Event)
+        .filter(
+            Event.approved.is_(True),
+            Event.datetime >= year_start,
+            Event.datetime < year_end,
+            Event.location.isnot(None),
+        )
+        .order_by(Event.datetime.asc())
+        .all()
+    )
+
+    # Group: city → alumni_id → (count, earliest_datetime).
+    per_city: dict[str, dict[str, tuple[int, datetime]]] = {}
+    for e in events:
+        city = (e.location or "").strip().lower()
+        if not city:
+            continue
+        for alumni_id in (e.participants_ids or []):
+            bucket = per_city.setdefault(city, {})
+            if alumni_id in bucket:
+                count, earliest = bucket[alumni_id]
+                bucket[alumni_id] = (count + 1, min(earliest, e.datetime))
+            else:
+                bucket[alumni_id] = (1, e.datetime)
+
+    winners: list[UserBadge] = []
+    for city, tally in per_city.items():
+        if not tally:
+            continue
+        # Highest count → earliest first-attendance → alumni_id, as a
+        # single min() over a tuple that inverts count so more is better.
+        winner_id, _ = min(
+            tally.items(),
+            key=lambda kv: (-kv[1][0], kv[1][1], kv[0]),
+        )
+
+        row = _award(
+            db,
+            winner_id,
+            badge,
+            extra={"city": city, "year": year},
+        )
+        if row is not None:
+            winners.append(row)
+
+    if winners:
+        db.commit()
+    return winners
