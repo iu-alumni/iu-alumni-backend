@@ -4,6 +4,12 @@ version = "1.0.0"
 description = "IU Alumni Platform Backend"
 requires-python = ">=3.11"
 
+[tool.pytest.ini_options]
+# Root-level `pytest` (CI's validate job) must not wander into e2e/ — that
+# suite has its own pytest.ini, deps (requirements-e2e.txt), and is meant
+# to be run separately with `cd e2e && pytest`.
+testpaths = ["tests"]
+
 [tool.ruff]
 # Set the Python version
 target-version = "py311"
