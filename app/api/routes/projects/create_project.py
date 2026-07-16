@@ -39,6 +39,7 @@ async def create_project(
             detail="Description is required",
         )
 
+    donation_link = body.donation_link.strip() if body.donation_link else None
     project = Project(
         id=get_random_token(),
         owner_id=current_user.id,
@@ -46,6 +47,7 @@ async def create_project(
         title=body.title.strip(),
         description=body.description.strip(),
         cover=body.cover,
+        donation_link=donation_link or None,
         approved=None,
     )
     db.add(project)

@@ -36,6 +36,10 @@ class Project(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
     cover = Column(String, nullable=True)
+    # Optional payment link (bank / Tinkoff / YooKassa / etc.). Free-text
+    # so we don't tie ourselves to a specific provider — the client just
+    # opens whatever URL the owner supplies.
+    donation_link = Column(String, nullable=True)
     approved = Column(Boolean, nullable=True, default=None, index=True)
     created_at = Column(
         DateTime, nullable=False, server_default=func.now()

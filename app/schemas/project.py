@@ -7,12 +7,14 @@ class CreateProjectRequest(BaseModel):
     title: str
     description: str
     cover: str | None = None
+    donation_link: str | None = None
 
 
 class UpdateProjectRequest(BaseModel):
     title: str | None = None
     description: str | None = None
     cover: str | None = None
+    donation_link: str | None = None
 
 
 class Project(BaseModel):
@@ -22,6 +24,7 @@ class Project(BaseModel):
     title: str
     description: str
     cover: str | None = None
+    donation_link: str | None = None
     approved: bool | None = None
     created_at: datetime
 
@@ -35,6 +38,7 @@ class ProjectListItem(BaseModel):
     title: str
     description: str
     cover: str | None = None
+    donation_link: str | None = None
     approved: bool | None = None
     created_at: datetime
 
