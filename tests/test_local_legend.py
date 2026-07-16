@@ -220,6 +220,52 @@ class TestComputeLocalLegend:
         assert len(first) == 1
         assert second == []
 
+    def test_three_cities_yield_three_winners_with_metadata(self, db):
+        """Ticket #15 acceptance criterion: seed 3 cities with attendees,
+        run compute_winners(year), assert 3 winners with correct metadata."""
+        _seed_badge(db)
+        owner = _alumni(db)
+        alice = _alumni(db, "alice")
+        bob = _alumni(db, "bob")
+        carol = _alumni(db, "carol")
+
+        # Dubai: alice attends 2 events, bob 1 → alice wins.
+        for i in range(2):
+            _event(
+                db, owner.id, "Dubai", datetime(2025, 6, i + 1),
+                participants=[alice.id],
+            )
+        _event(
+            db, owner.id, "Dubai", datetime(2025, 7, 1), participants=[bob.id]
+        )
+        # Berlin: bob attends 2 events, carol 1 → bob wins.
+        for i in range(2):
+            _event(
+                db, owner.id, "Berlin", datetime(2025, 5, i + 1),
+                participants=[bob.id],
+            )
+        _event(
+            db, owner.id, "Berlin", datetime(2025, 5, 15),
+            participants=[carol.id],
+        )
+        # Innopolis: carol attends 2 events alone → carol wins.
+        for i in range(2):
+            _event(
+                db, owner.id, "Innopolis", datetime(2025, 4, i + 1),
+                participants=[carol.id],
+            )
+        db.commit()
+
+        winners = service.compute_local_legend_winners(db, 2025)
+
+        assert len(winners) == 3
+        by_city = {w.extra["city"]: (w.alumni_id, w.extra["year"]) for w in winners}
+        assert by_city == {
+            "dubai": (alice.id, 2025),
+            "berlin": (bob.id, 2025),
+            "innopolis": (carol.id, 2025),
+        }
+
     def test_location_case_and_whitespace_normalized(self, db):
         _seed_badge(db)
         owner = _alumni(db)
