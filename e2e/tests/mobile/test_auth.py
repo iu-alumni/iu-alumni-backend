@@ -16,7 +16,8 @@ pytestmark = pytest.mark.mobile
 
 
 @pytest.mark.smoke
-def test_register_then_login(mobile_page, test_user: TestUser, browser) -> None:
+def test_register_then_login(mobile_page, test_user: TestUser, browser, created_users) -> None:
+    created_users.append(test_user.email)
     login_page = MobileLoginPage(mobile_page)
     login_page.is_loaded()
     login_page.fill_credentials(test_user.email, test_user.password)

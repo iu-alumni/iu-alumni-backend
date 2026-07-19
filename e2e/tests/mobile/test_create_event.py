@@ -11,9 +11,10 @@ pytestmark = pytest.mark.mobile
 
 
 @pytest.mark.smoke
-def test_create_event_appears_in_list_after_refresh(logged_in_page) -> None:
+def test_create_event_appears_in_list_after_refresh(logged_in_page, created_events) -> None:
     events_list = MobileEventsListPage(logged_in_page)
     event = TestEvent()
+    created_events.append(event.title)
 
     events_list.open_create_event()
     MobileEventEditingPage(logged_in_page).create(event)

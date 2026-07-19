@@ -22,6 +22,23 @@ class AdminEventsPage(BasePage):
         self.page.get_by_role("link", name="Events").click()
         expect(self.page.get_by_role("heading", name="Events", level=2)).to_be_visible()
 
+    def refresh(self) -> None:
+        """Reload the current /events page and wait for the real
+        approval-settings response — not just for *a* button to render.
+
+        Unlike navigating to a *different* section, `page.reload()` here
+        is safe — the admin token lives in localStorage, not just memory,
+        so a reload keeps the session. Critical detail: `isVerificationEnabled`
+        in `events/index.vue` defaults to `false` (showing "Auto-approve
+        (Off)") until the settings fetch resolves — so a "some button is
+        visible" check reads that default as truth and can be wrong in
+        either direction. Waiting for the actual network response is what
+        makes `set_auto_approve()` below reliable instead of a coin flip.
+        """
+        with self.page.expect_response(lambda r: "settings/events" in r.url):
+            self.page.reload()
+        expect(self.page.get_by_role("heading", name="Events", level=2)).to_be_visible()
+
     def row(self, event_title: str) -> Locator:
         """The single table row for `event_title` (desktop layout)."""
         return self.page.locator("div.divide-y > div", has_text=event_title)
@@ -41,10 +58,12 @@ class AdminEventsPage(BasePage):
     def set_auto_approve(self, *, enabled: bool) -> None:
         """Ensure the "Auto-approve" toggle is in the given state.
 
-        The button's own label always reflects the *current* state (see
-        `pages/events/index.vue`), so we only click it when it doesn't
-        already say what we want.
+        Always refreshes first — `refresh()` guarantees the button reflects
+        the real, server-confirmed state by the time we read it, so a
+        single read-then-click-if-needed is enough; no retry loop blindly
+        re-clicking, which risks flipping it back and forth.
         """
+        self.refresh()
         desired = self.page.get_by_role(
             "button",
             name=f"Auto-approve ({'On' if enabled else 'Off'})",
@@ -55,5 +74,6 @@ class AdminEventsPage(BasePage):
             "button",
             name=f"Auto-approve ({'Off' if enabled else 'On'})",
         )
-        other.click()
+        with self.page.expect_response(lambda r: "toggle-auto-approve" in r.url):
+            other.click()
         expect(desired).to_be_visible()
