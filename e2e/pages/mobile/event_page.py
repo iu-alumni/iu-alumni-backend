@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import re
+
 from playwright.sync_api import Page, expect
+
+
+_DATE_TAG_PATTERN = re.compile(r"\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}")
 
 
 class MobileEventPage:
@@ -10,6 +15,9 @@ class MobileEventPage:
     def expect_details(self, *, title: str, description: str) -> None:
         expect(self.page.get_by_text(title, exact=False)).to_be_visible()
         expect(self.page.get_by_text(description, exact=False)).to_be_visible()
+
+    def expect_date_visible(self) -> None:
+        expect(self.page.get_by_text(_DATE_TAG_PATTERN)).to_be_visible()
 
     def expect_location(self, location: str) -> None:
         expect(self.page.get_by_text(location, exact=False)).to_be_visible()

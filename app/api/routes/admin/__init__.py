@@ -4,6 +4,7 @@ from app.api.routes.admin import (
     approve_event,
     ban,
     decline_event,
+    delete_alumni,
     email_diagnostic,
     list_all_events,
     list_all_projects,
@@ -23,6 +24,7 @@ router = APIRouter()
 
 router.include_router(ban.router)
 router.include_router(unban.router)
+router.include_router(delete_alumni.router)
 router.include_router(list_banned.router)
 router.include_router(list_all_events.router)
 router.include_router(approve_event.router)

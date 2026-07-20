@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     mobile_base_url: str = Field(alias="MOBILE_BASE_URL")
     admin_base_url: str = Field(alias="ADMIN_BASE_URL")
+    api_base_url: str = Field(alias="API_BASE_URL")
 
     admin_email: str = Field(alias="ADMIN_EMAIL")
     admin_password: str = Field(alias="ADMIN_PASSWORD")
