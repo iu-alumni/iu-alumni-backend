@@ -13,6 +13,7 @@ from app.api.routes.authentication import router as auth_router
 from app.api.routes.badges import router as badges_router
 from app.api.routes.cities import router as cities_router
 from app.api.routes.events import router as events_router
+from app.api.routes.notifications import router as notifications_router
 from app.api.routes.profile import router as profile_router
 from app.api.routes.projects import router as projects_router
 from app.api.routes.telegram import router as telegram_router
@@ -21,6 +22,7 @@ from app.core.logging import app_logger, setup_logging
 from app.core.security import get_password_hash, get_random_token
 from app.models.users import Admin
 from app.services.telegram_polling import start_polling
+from scripts.seed_cities import seed_cities
 
 
 # Initialize logging
@@ -44,6 +46,18 @@ async def lifespan(app: FastAPI):
             app_logger.info("Initial admin user created")
         else:
             app_logger.debug("Admin user already exists")
+    finally:
+        db.close()
+
+    # Startup: seed reference city data if missing (needed for location
+    # search/autocomplete — /cities/search and /cities/coordinates).
+    db = SessionLocal()
+    try:
+        inserted = seed_cities(db)
+        if inserted:
+            app_logger.info(f"Seeded {inserted} new cities")
+        else:
+            app_logger.debug("Cities table already seeded")
     finally:
         db.close()
 
@@ -119,6 +133,7 @@ api_v1.include_router(admin_router, prefix="/admin", tags=["Admin"])
 api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
 api_v1.include_router(badges_router, prefix="/badges", tags=["Badges"])
 api_v1.include_router(projects_router, prefix="/projects", tags=["Projects"])
+api_v1.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
 app.include_router(api_v1)
 app.include_router(telegram_router, tags=["Telegram"])
 
