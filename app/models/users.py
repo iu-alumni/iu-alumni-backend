@@ -1,7 +1,15 @@
-from sqlalchemy import Boolean, Column, DateTime, String
+from sqlalchemy import Boolean, Column, ForeignKey, DateTime, String, Table
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
+
+
+alumni_follows = Table(
+    "alumni_follows",
+    Base.metadata,
+    Column("follower_id", String, ForeignKey("alumni.id", ondelete="CASCADE"), primary_key=True, nullable=False, index=True),
+    Column("followed_id", String, ForeignKey("alumni.id", ondelete="CASCADE"), primary_key=True, nullable=False, index=True),
+)
 
 
 class Alumni(Base):
@@ -30,6 +38,32 @@ class Alumni(Base):
     email_verification = relationship(
         "EmailVerification", back_populates="alumni", uselist=False
     )
+
+    followers = relationship(
+        "Alumni",
+        secondary=alumni_follows,
+        primaryjoin=id == alumni_follows.c.followed_id,
+        secondaryjoin=id == alumni_follows.c.follower_id,
+        back_populates="following",
+        foreign_keys=[alumni_follows.c.followed_id, alumni_follows.c.follower_id],
+    )
+
+    following = relationship(
+        "Alumni",
+        secondary=alumni_follows,
+        primaryjoin=id == alumni_follows.c.follower_id,
+        secondaryjoin=id == alumni_follows.c.followed_id,
+        back_populates="followers",
+        foreign_keys=[alumni_follows.c.follower_id, alumni_follows.c.followed_id],
+    )
+
+    @property
+    def followers_count(self) -> int:
+        return len(self.followers) if self.followers is not None else 0
+
+    @property
+    def following_count(self) -> int:
+        return len(self.following) if self.following is not None else 0
 
 
 class Admin(Base):

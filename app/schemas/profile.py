@@ -5,6 +5,14 @@ class AvatarResponse(BaseModel):
     avatar: str | None = None
 
 
+class FollowStatusResponse(BaseModel):
+    user_id: str
+    is_following: bool
+
+    class Config:
+        from_attributes = True
+
+
 class ProfileResponse(BaseModel):
     id: str
     first_name: str
@@ -16,6 +24,9 @@ class ProfileResponse(BaseModel):
     telegram_alias: str | None = None
     is_telegram_verified: bool = False
     avatar: str | None = None
+    followers_count: int = 0
+    following_count: int = 0
+    is_following: bool = False
 
     class Config:
         from_attributes = True
