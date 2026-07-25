@@ -15,13 +15,16 @@ the SQL that Postgres runs for it.
 """
 from __future__ import annotations
 
+from typing import ClassVar
 import uuid
 
 import pytest
 from sqlalchemy import JSON
 
 from app.models.badge import Badge, UserBadge
-from app.models.email_verification import EmailVerification  # noqa: F401 — needed for Alumni relationship resolution
+from app.models.email_verification import (
+    EmailVerification,  # noqa: F401 — needed for Alumni relationship resolution
+)
 from app.models.users import Alumni
 from app.services import badges as service
 
@@ -43,7 +46,7 @@ def _patch_badge_columns_for_sqlite():
     for col in UserBadge.__table__.columns:
         if col.type.__class__.__name__ in ("JSONB",):
             col.type = JSON()
-    yield
+    return
 
 
 @pytest.fixture
@@ -141,7 +144,9 @@ class TestYearRange:
 class TestProfileCompleteness:
     """Profile Pro — all listed fields populated."""
 
-    FIELDS = ["avatar", "location", "biography", "graduation_year", "telegram_alias"]
+    FIELDS: ClassVar[list[str]] = [
+        "avatar", "location", "biography", "graduation_year", "telegram_alias",
+    ]
 
     def test_all_fields_populated_awards(self, db):
         alumni = _mk_alumni(
