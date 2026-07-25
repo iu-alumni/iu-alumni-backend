@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CreateProjectRequest(BaseModel):
@@ -8,6 +8,7 @@ class CreateProjectRequest(BaseModel):
     description: str
     cover: str | None = None
     donation_link: str | None = None
+    goal_amount: int | None = None
 
 
 class UpdateProjectRequest(BaseModel):
@@ -15,6 +16,13 @@ class UpdateProjectRequest(BaseModel):
     description: str | None = None
     cover: str | None = None
     donation_link: str | None = None
+    goal_amount: int | None = None
+
+
+class DonateRequest(BaseModel):
+    # Whole rubles. Positive int only; the endpoint is for logging money
+    # actually given, so a zero or negative amount doesn't make sense.
+    amount: int = Field(gt=0)
 
 
 class Project(BaseModel):
@@ -25,6 +33,8 @@ class Project(BaseModel):
     description: str
     cover: str | None = None
     donation_link: str | None = None
+    goal_amount: int | None = None
+    raised_amount: int = 0
     approved: bool | None = None
     created_at: datetime
 
@@ -39,6 +49,8 @@ class ProjectListItem(BaseModel):
     description: str
     cover: str | None = None
     donation_link: str | None = None
+    goal_amount: int | None = None
+    raised_amount: int = 0
     approved: bool | None = None
     created_at: datetime
 

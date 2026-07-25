@@ -62,6 +62,8 @@ def _seed_project(
     title: str = "Alumni Lounge",
     description: str = "Furnishing the new on-campus alumni lounge.",
     contributors: list[str] | None = None,
+    donation_link: str = "https://tinkoff.ru/rm/example",
+    goal_amount: int = 100000,
 ) -> Project:
     project = Project(
         id="p-" + uuid.uuid4().hex[:8],
@@ -71,6 +73,9 @@ def _seed_project(
         description=description,
         cover=None,
         approved=approved,
+        donation_link=donation_link,
+        goal_amount=goal_amount,
+        raised_amount=0,
     )
     db.add(project)
     db.commit()
@@ -89,7 +94,10 @@ class TestCreateProject:
 
         res = await create_project(
             body=CreateProjectRequest(
-                title="Campus Greenhouse", description="Year-round greenhouse."
+                title="Campus Greenhouse",
+                description="Year-round greenhouse.",
+                donation_link="https://tinkoff.ru/rm/greenhouse",
+                goal_amount=500000,
             ),
             db=db_session,
             current_user=alice,
