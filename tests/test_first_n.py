@@ -153,7 +153,8 @@ class TestFirstNConcurrent:
     @pytest.mark.skip(reason="Requires DB-level locking + concurrent fixture; see docstring.")
     def test_two_hundred_parallel_triggers_award_exactly_n(self, db):
         _pioneer(db)
-        alumni = [_alumni(db) for _ in range(200)]
+        # Sketch: build 200 alumni, evaluate concurrently, assert exactly N rows.
+        _ = [_alumni(db) for _ in range(200)]
         db.commit()
         # Would need: run each evaluate_for_user in its own transaction,
         # concurrently, and assert the badge_id count == N.
