@@ -41,7 +41,7 @@ jobs:
       # Dropped the `|| [ $? -eq 5 ]` escape hatch: exit 5 means "no tests were
       # collected", and with a populated tests/ that is a broken run, not a pass.
       - name: Run pytest
-        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered
+        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered --cov-fail-under=72
 
   build-image:
     needs: validate
