@@ -37,8 +37,11 @@ jobs:
       - name: Lint with ruff
         run: ruff check .
 
+      # pytest-cov is already a dependency but coverage was never measured.
+      # Dropped the `|| [ $? -eq 5 ]` escape hatch: exit 5 means "no tests were
+      # collected", and with a populated tests/ that is a broken run, not a pass.
       - name: Run pytest
-        run: pytest --tb=short -q || [ $? -eq 5 ]
+        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered
 
   build-image:
     needs: validate
