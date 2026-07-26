@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -55,7 +56,17 @@ async def admin_list_projects(
     if cursor:
         c = decode_cursor(cursor)
         cursor_dt = cursor_datetime(c["dt"])
-        query = query.filter(Project.created_at < cursor_dt)
+        # Results are ordered by (created_at DESC, id ASC), so the cursor has to
+        # compare on both. created_at defaults to server_default=func.now(),
+        # which is the transaction timestamp in Postgres — projects created
+        # together tie exactly, and comparing created_at alone skips every one
+        # of them that ties with the page boundary.
+        query = query.filter(
+            or_(
+                Project.created_at < cursor_dt,
+                and_(Project.created_at == cursor_dt, Project.id > c["id"]),
+            )
+        )
 
     projects = (
         query.order_by(Project.created_at.desc(), Project.id.asc())
