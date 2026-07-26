@@ -5,7 +5,12 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.projects import Project
 from app.models.users import Admin, Alumni
-from app.schemas.pagination import Paginated, decode_cursor, encode_cursor
+from app.schemas.pagination import (
+    Paginated,
+    cursor_datetime,
+    decode_cursor,
+    encode_cursor,
+)
 from app.schemas.project import ProjectListItem
 
 
@@ -49,7 +54,8 @@ async def admin_list_projects(
         query = query.filter(Project.title.ilike(f"%{search}%"))
     if cursor:
         c = decode_cursor(cursor)
-        query = query.filter(Project.created_at < c["dt"])
+        cursor_dt = cursor_datetime(c["dt"])
+        query = query.filter(Project.created_at < cursor_dt)
 
     projects = (
         query.order_by(Project.created_at.desc(), Project.id.asc())
