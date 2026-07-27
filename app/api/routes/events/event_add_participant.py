@@ -76,13 +76,19 @@ async def add_participant(
             )
 
         # Badge evaluation (failure-tolerant — never blocks the response).
+        awarded_codes: list[str] = []
         try:
-            evaluate_for_user(db, participant, "event_attended")
+            new_rows = evaluate_for_user(db, participant, "event_attended")
+            awarded_codes = [r.badge.code for r in new_rows if r.badge]
         except Exception as eval_err:
             import logging
             logging.getLogger("iu_alumni").error(
                 "badge eval failed on event_attended: %s", eval_err
             )
+
+        if awarded_codes:
+            from app.services.badge_notifications import notify_badge_awards
+            await notify_badge_awards(db, participant, awarded_codes)
 
         return {"message": "Successfully joined the event"}
     except Exception as e:

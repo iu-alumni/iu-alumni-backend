@@ -36,18 +36,30 @@ async def approve_event(
     db.refresh(event)
 
     # Badge eval for the host (Founding Host, Host with the most, Rainmaker).
+    awarded_codes: list[str] = []
+    owner: Alumni | None = None
     try:
         from app.services.badges import award_founding_host, evaluate_for_user
 
         owner = db.query(Alumni).filter(Alumni.id == event.owner_id).first()
         if owner is not None:
-            evaluate_for_user(db, owner, "event_approved")
-            if award_founding_host(db, owner, event) is not None:
+            # Some badge strategies signal that no badge was earned with
+            # ``None``. Treat that exactly like an empty result so the
+            # Founding Host evaluation still runs.
+            new_rows = evaluate_for_user(db, owner, "event_approved") or []
+            awarded_codes.extend(r.badge.code for r in new_rows if r.badge)
+            fh = award_founding_host(db, owner, event)
+            if fh is not None:
                 db.commit()
+                awarded_codes.append("founding_host")
     except Exception as eval_err:
         import logging
         logging.getLogger("iu_alumni").error(
             "badge eval failed on event_approved: %s", eval_err
         )
+
+    if owner is not None and awarded_codes:
+        from app.services.badge_notifications import notify_badge_awards
+        await notify_badge_awards(db, owner, awarded_codes)
 
     return event

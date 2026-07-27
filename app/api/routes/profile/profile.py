@@ -35,7 +35,7 @@ def get_profile(
 
 
 @router.put("/me", response_model=ProfileResponse)
-def update_profile(
+async def update_profile(
     profile_data: ProfileUpdateRequest,
     current_user: Alumni = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -83,13 +83,19 @@ def update_profile(
     db.refresh(current_user)
 
     # Badge eval (Pioneer, Innopolis OG, Profile Pro, Cross-city commuter).
+    awarded_codes: list[str] = []
     try:
         from app.services.badges import evaluate_for_user
-        evaluate_for_user(db, current_user, "profile_updated")
+        new_rows = evaluate_for_user(db, current_user, "profile_updated")
+        awarded_codes = [r.badge.code for r in new_rows if r.badge]
     except Exception as eval_err:
         import logging
         logging.getLogger("iu_alumni").error(
             "badge eval failed on profile_updated: %s", eval_err
         )
+
+    if awarded_codes:
+        from app.services.badge_notifications import notify_badge_awards
+        await notify_badge_awards(db, current_user, awarded_codes)
 
     return current_user
