@@ -43,7 +43,10 @@ async def approve_event(
 
         owner = db.query(Alumni).filter(Alumni.id == event.owner_id).first()
         if owner is not None:
-            new_rows = evaluate_for_user(db, owner, "event_approved")
+            # Some badge strategies signal that no badge was earned with
+            # ``None``. Treat that exactly like an empty result so the
+            # Founding Host evaluation still runs.
+            new_rows = evaluate_for_user(db, owner, "event_approved") or []
             awarded_codes.extend(r.badge.code for r in new_rows if r.badge)
             fh = award_founding_host(db, owner, event)
             if fh is not None:
