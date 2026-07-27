@@ -16,8 +16,11 @@ def get_unread_count(
     db: Session = Depends(get_db),
     current_user: Alumni | Admin = Depends(get_current_user),
 ):
-    """Count of currently-matching events not yet seen. Does not mark read —
-    used to drive the bell icon's badge without opening the list."""
+    """Count of currently-matching events not yet seen.
+
+    Does not mark read — used to drive the bell icon's badge without opening
+    the list.
+    """
     if not isinstance(current_user, Alumni):
         return UnreadCountResponse(count=0)
 

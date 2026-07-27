@@ -78,8 +78,9 @@ def _window_entry_time(event: Event) -> datetime:
 def find_nearby_upcoming_events(
     db: Session, alumni: Alumni, now: datetime | None = None
 ) -> list[Event]:
-    """Approved events within ~7 days that are near `alumni`, most
-    recently-relevant first. Includes events that have already happened —
+    """Approved events near `alumni`, most recently-relevant first.
+
+    Covers a ~7 day window. Includes events that have already happened —
     a match doesn't disappear just because time passed or the event
     occurred; see the module docstring.
 
@@ -110,8 +111,10 @@ def find_nearby_upcoming_events(
 
 
 def is_read(alumni: Alumni, event: Event) -> bool:
-    """Whether `alumni` has viewed the notifications list since this event
-    entered the ~7-day window."""
+    """Whether `alumni` has viewed the list since this event became relevant.
+
+    "Relevant" means the point the event entered the ~7-day window.
+    """
     seen_at = alumni.notifications_seen_at
     return seen_at is not None and seen_at >= _window_entry_time(event)
 
