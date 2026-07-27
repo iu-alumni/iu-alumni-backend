@@ -1,0 +1,6 @@
+# Load-testing dependencies (kept separate from app/test deps).
+# Install only when running the R-04 pre-event load test:
+#   pip install -r load_tests/requirements-load.txt
+locust>=2.20.0
+python-dotenv>=1.0.0
+
