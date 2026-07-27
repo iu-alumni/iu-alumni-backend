@@ -1,2 +1,5 @@
 # Event reminder cron job - runs every hour
 0 * * * * cd /app && python scripts/send_event_reminders.py >> /app/logs/reminders.log 2>&1
+
+# Local Legend leaderboard — annual, Jan 2 00:30 UTC (awards winners for previous year)
+30 0 2 1 * cd /app && python scripts/recompute_local_legend.py >> /app/logs/local_legend.log 2>&1

@@ -31,13 +31,14 @@ def _alumni(
     )
 
 
-def test_update_profile_rejects_blank_required_names(db_session):
+@pytest.mark.asyncio
+async def test_update_profile_rejects_blank_required_names(db_session):
     user = _alumni("user-1")
     db_session.add(user)
     db_session.commit()
 
     with pytest.raises(HTTPException) as exc_info:
-        update_profile(
+        await update_profile(
             ProfileUpdateRequest(first_name="   "),
             current_user=user,
             db=db_session,
@@ -47,12 +48,13 @@ def test_update_profile_rejects_blank_required_names(db_session):
     assert exc_info.value.detail == "First name is required"
 
 
-def test_update_profile_trims_names_and_clears_avatar(db_session):
+@pytest.mark.asyncio
+async def test_update_profile_trims_names_and_clears_avatar(db_session):
     user = _alumni("user-1")
     db_session.add(user)
     db_session.commit()
 
-    updated = update_profile(
+    updated = await update_profile(
         ProfileUpdateRequest(first_name="  Ada  ", last_name="  Lovelace  ", avatar=""),
         current_user=user,
         db=db_session,

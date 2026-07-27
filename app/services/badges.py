@@ -233,15 +233,24 @@ def _should_award(
 
 
 def _award(
-    db: Session, alumni_id: str, badge: Badge, extra: dict | None = None
+    db: Session,
+    alumni_id: str,
+    badge: Badge,
+    extra: dict | None = None,
+    awarded_by: str | None = None,
 ) -> UserBadge | None:
-    """Insert a UserBadge row. Idempotent on (alumni_id, badge_id, extra)."""
+    """Insert a UserBadge row. Idempotent on (alumni_id, badge_id, extra).
+
+    `awarded_by` records the admin id for manual awards; leave None for
+    the auto-evaluator so the row keeps its "system-awarded" meaning.
+    """
     row = UserBadge(
         id=str(uuid.uuid4()),
         alumni_id=alumni_id,
         badge_id=badge.id,
         awarded_at=datetime.utcnow(),
         extra=extra or {},
+        awarded_by=awarded_by,
     )
     db.add(row)
     try:
@@ -506,3 +515,149 @@ def mark_seen(db: Session, alumni: Alumni, badge_code: str) -> bool:
         r.seen_at = datetime.utcnow()
     db.commit()
     return bool(rows)
+
+
+# ─────────────────────────── manual admin actions ──────────────────────────
+
+
+class ManualAwardError(Exception):
+    """Raised for a manual-award / manual-revoke pre-condition failure.
+
+    The message is safe to surface as a 4xx response body.
+    """
+
+
+def manual_award(
+    db: Session,
+    alumni: Alumni,
+    badge_code: str,
+    admin_id: str,
+    metadata: dict | None = None,
+) -> UserBadge:
+    """Insert a UserBadge row for the given code on behalf of an admin.
+
+    Raises ManualAwardError if the badge doesn't exist or the row is a
+    duplicate (idempotent uniqueness constraint hit).
+    """
+    badge = db.query(Badge).filter(Badge.code == badge_code).first()
+    if badge is None:
+        raise ManualAwardError(f"badge '{badge_code}' does not exist")
+
+    row = _award(db, alumni.id, badge, metadata, awarded_by=admin_id)
+    if row is None:
+        raise ManualAwardError(
+            f"badge '{badge_code}' already awarded to this user with the same metadata"
+        )
+    db.commit()
+    return row
+
+
+def manual_revoke(
+    db: Session,
+    alumni: Alumni,
+    badge_code: str,
+    metadata: dict | None = None,
+) -> Badge:
+    """Delete the matching UserBadge row for `badge_code` (+ optional metadata).
+
+    Raises ManualAwardError if the badge doesn't exist or the user doesn't
+    hold it. Returns the Badge for the caller to include in the response.
+    """
+    badge = db.query(Badge).filter(Badge.code == badge_code).first()
+    if badge is None:
+        raise ManualAwardError(f"badge '{badge_code}' does not exist")
+
+    q = db.query(UserBadge).filter(
+        UserBadge.alumni_id == alumni.id, UserBadge.badge_id == badge.id
+    )
+    if metadata is not None:
+        q = q.filter(UserBadge.extra == metadata)
+    rows = q.all()
+    if not rows:
+        raise ManualAwardError(
+            f"user does not hold badge '{badge_code}'"
+            + (f" with metadata {metadata}" if metadata else "")
+        )
+    for r in rows:
+        db.delete(r)
+    db.commit()
+    return badge
+
+
+# ─────────────────────────── leaderboard (Local Legend) ────────────────────
+
+
+def compute_local_legend_winners(
+    db: Session, year: int
+) -> list[UserBadge]:
+    """Compute Local Legend winners for the given year.
+
+    For each city (normalized `event.location` lowercased + trimmed)
+    that had approved events in the year, find the alumni with the
+    highest attendance count. Ties broken deterministically by the
+    earliest `event.datetime` among that alumni's attended events in
+    that city.
+
+    Idempotent: relies on the `(alumni_id, badge_id, extra)` unique
+    constraint to avoid double-awards on re-run.
+
+    Future improvement: introduce an FK from `events.city_id` to the
+    `cities` table so this is a clean SQL join instead of Python-side
+    grouping on a lower/trim of a free-text column.
+    """
+    badge = db.query(Badge).filter(Badge.code == "local_legend").first()
+    if badge is None:
+        logger.warning("compute_local_legend_winners: Local Legend badge not seeded")
+        return []
+
+    year_start = datetime(year, 1, 1)
+    year_end = datetime(year + 1, 1, 1)
+    events = (
+        db.query(Event)
+        .filter(
+            Event.approved.is_(True),
+            Event.datetime >= year_start,
+            Event.datetime < year_end,
+            Event.location.isnot(None),
+        )
+        .order_by(Event.datetime.asc())
+        .all()
+    )
+
+    # Group: city → alumni_id → (count, earliest_datetime).
+    per_city: dict[str, dict[str, tuple[int, datetime]]] = {}
+    for e in events:
+        city = (e.location or "").strip().lower()
+        if not city:
+            continue
+        for alumni_id in (e.participants_ids or []):
+            bucket = per_city.setdefault(city, {})
+            if alumni_id in bucket:
+                count, earliest = bucket[alumni_id]
+                bucket[alumni_id] = (count + 1, min(earliest, e.datetime))
+            else:
+                bucket[alumni_id] = (1, e.datetime)
+
+    winners: list[UserBadge] = []
+    for city, tally in per_city.items():
+        if not tally:
+            continue
+        # Highest count → earliest first-attendance → alumni_id, as a
+        # single min() over a tuple that inverts count so more is better.
+        winner_id, _ = min(
+            tally.items(),
+            key=lambda kv: (-kv[1][0], kv[1][1], kv[0]),
+        )
+
+        row = _award(
+            db,
+            winner_id,
+            badge,
+            extra={"city": city, "year": year},
+        )
+        if row is not None:
+            winners.append(row)
+
+    if winners:
+        db.commit()
+    return winners
