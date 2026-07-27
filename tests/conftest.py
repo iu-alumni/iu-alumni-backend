@@ -117,6 +117,7 @@ def client(db_session):
     from app.api.routes.authentication import router as auth_router
     from app.api.routes.cities import router as cities_router
     from app.api.routes.events import router as events_router
+    from app.api.routes.notifications import router as notifications_router
     from app.api.routes.profile import router as profile_router
     from app.api.routes.projects import router as projects_router
     from app.api.routes.telegram import router as telegram_router
@@ -130,6 +131,9 @@ def client(db_session):
     api_v1.include_router(admin_router, prefix="/admin", tags=["Admin"])
     api_v1.include_router(cities_router, prefix="/cities", tags=["Cities"])
     api_v1.include_router(projects_router, prefix="/projects", tags=["Projects"])
+    api_v1.include_router(
+        notifications_router, prefix="/notifications", tags=["Notifications"]
+    )
     app.include_router(api_v1)
     app.include_router(telegram_router, tags=["Telegram"])
 
