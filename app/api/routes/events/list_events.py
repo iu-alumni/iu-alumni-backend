@@ -7,7 +7,12 @@ from app.core.security import get_current_user
 from app.models.events import Event
 from app.models.users import Admin, Alumni
 from app.schemas.event import EventListItem
-from app.schemas.pagination import Paginated, decode_cursor, encode_cursor
+from app.schemas.pagination import (
+    Paginated,
+    cursor_datetime,
+    decode_cursor,
+    encode_cursor,
+)
 
 
 router = APIRouter()
@@ -29,10 +34,11 @@ async def list_events(
 
     if cursor:
         c = decode_cursor(cursor)
+        cursor_dt = cursor_datetime(c["dt"])
         query = query.filter(
             or_(
-                Event.datetime < c["dt"],
-                and_(Event.datetime == c["dt"], Event.id > c["id"]),
+                Event.datetime < cursor_dt,
+                and_(Event.datetime == cursor_dt, Event.id > c["id"]),
             )
         )
 

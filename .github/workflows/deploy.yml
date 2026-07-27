@@ -37,8 +37,11 @@ jobs:
       - name: Lint with ruff
         run: ruff check .
 
+      # pytest-cov is already a dependency but coverage was never measured.
+      # Dropped the `|| [ $? -eq 5 ]` escape hatch: exit 5 means "no tests were
+      # collected", and with a populated tests/ that is a broken run, not a pass.
       - name: Run pytest
-        run: pytest --tb=short -q || [ $? -eq 5 ]
+        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered --cov-fail-under=85
 
   build-image:
     needs: validate
@@ -97,6 +100,29 @@ jobs:
       image_var: BACKEND_IMAGE
       image_tag: ghcr.io/${{ github.repository }}:${{ github.sha }}
       branch: main
+      environment: production
+    secrets:
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+
+  # Verify the deploy actually serves traffic. A deploy step exiting 0 only means
+  # the SSH script ran — production once sat with a dead Docker daemon while runs
+  # were still reported as successful.
+  smoke-testing:
+    needs: deploy-testing
+    uses: iu-alumni/iu-alumni-infra/.github/workflows/smoke-test.yml@main
+    with:
+      environment: testing
+    secrets:
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+
+  smoke-production:
+    needs: deploy-production
+    uses: iu-alumni/iu-alumni-infra/.github/workflows/smoke-test.yml@main
+    with:
       environment: production
     secrets:
       SERVER_HOST: ${{ secrets.SERVER_HOST }}
