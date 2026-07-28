@@ -38,8 +38,18 @@ async def verify_user(
     # Get the verified user to send email
     user = db.query(Alumni).filter(Alumni.email == request.email).first()
     if user:
+        # Apply the optional role override — admins can flip a pending
+        # user's role at approval time (see AdminVerifyRequest).
+        if request.role is not None and request.role != user.role:
+            user.role = request.role
+            # Alumni Friends have no graduation year by design; clear it
+            # so the record stays consistent with the role.
+            if request.role == "alumni_friend":
+                user.graduation_year = None
+            db.commit()
+            db.refresh(user)
         background_tasks.add_task(
             send_verification_success_email, user.email, user.first_name
         )
 
-    return {"message": message, "email": request.email}
+    return {"message": message, "email": request.email, "role": user.role if user else None}
