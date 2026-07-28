@@ -59,9 +59,10 @@ class RegisterRequest(BaseModel):
             # The field is meaningless for friends — null it regardless
             # of what the client sent so the row stays consistent.
             self.graduation_year = None
-        elif self.role == "alumni":
-            if self.graduation_year is None or not self.graduation_year.strip():
-                raise ValueError("graduation_year is required for role='alumni'")
+        elif self.role == "alumni" and (
+            self.graduation_year is None or not self.graduation_year.strip()
+        ):
+            raise ValueError("graduation_year is required for role='alumni'")
         return self
 
     @field_validator("email")

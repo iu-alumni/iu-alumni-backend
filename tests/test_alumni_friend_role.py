@@ -21,17 +21,17 @@ from app.schemas.profile import ProfileUpdateRequest
 
 
 def _alumnus(**overrides) -> Alumni:
-    defaults = dict(
-        id="u-1",
-        email="u@innopolis.university",
-        hashed_password="x",
-        first_name="U",
-        last_name="U",
-        graduation_year="2024",
-        role="alumni",
-        is_verified=False,
-        is_banned=False,
-    )
+    defaults = {
+        "id": "u-1",
+        "email": "u@innopolis.university",
+        "hashed_password": "x",
+        "first_name": "U",
+        "last_name": "U",
+        "graduation_year": "2024",
+        "role": "alumni",
+        "is_verified": False,
+        "is_banned": False,
+    }
     defaults.update(overrides)
     return Alumni(**defaults)
 
@@ -45,7 +45,7 @@ def _admin() -> Admin:
 
 class TestRegisterValidation:
     def test_alumni_requires_graduation_year(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="graduation_year is required"):
             RegisterRequest(
                 first_name="A",
                 last_name="B",
@@ -56,7 +56,7 @@ class TestRegisterValidation:
             )
 
     def test_alumni_rejects_blank_graduation_year(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="graduation_year is required"):
             RegisterRequest(
                 first_name="A",
                 last_name="B",
@@ -80,7 +80,8 @@ class TestRegisterValidation:
         assert req.role == "alumni_friend"
 
     def test_bad_role_rejected(self):
-        with pytest.raises(ValueError):
+        # Pydantic's regex/pattern failure surfaces as "String should match pattern".
+        with pytest.raises(ValueError, match="should match pattern"):
             RegisterRequest(
                 first_name="A",
                 last_name="B",
@@ -177,5 +178,5 @@ class _BgTasksStub:
     """Stand-in for FastAPI's BackgroundTasks — we don't care about the
     email side-effect in these tests."""
 
-    def add_task(self, *args, **kwargs):
+    def add_task(self, *args, **kwargs):  # noqa: ARG002 — stub signature match
         return None
