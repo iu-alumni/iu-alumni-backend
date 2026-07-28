@@ -22,7 +22,6 @@ from app.core.logging import app_logger, setup_logging
 from app.core.security import get_password_hash, get_random_token
 from app.models.users import Admin
 from app.services.telegram_polling import start_polling
-from scripts.seed_cities import seed_cities
 
 
 # Initialize logging
@@ -46,18 +45,6 @@ async def lifespan(app: FastAPI):
             app_logger.info("Initial admin user created")
         else:
             app_logger.debug("Admin user already exists")
-    finally:
-        db.close()
-
-    # Startup: seed reference city data if missing (needed for location
-    # search/autocomplete — /cities/search and /cities/coordinates).
-    db = SessionLocal()
-    try:
-        inserted = seed_cities(db)
-        if inserted:
-            app_logger.info(f"Seeded {inserted} new cities")
-        else:
-            app_logger.debug("Cities table already seeded")
     finally:
         db.close()
 
