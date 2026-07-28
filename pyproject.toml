@@ -10,6 +10,11 @@ requires-python = ">=3.11"
 # to be run separately with `cd e2e && pytest`.
 testpaths = ["tests"]
 
+[tool.bandit]
+# Security static analysis (QR5). Scan application code only; skip vendored,
+# generated, and test/tooling directories.
+exclude_dirs = ["venv", ".venv", "tests", "e2e", "load_tests", "alembic", "scripts"]
+
 [tool.ruff]
 # Set the Python version
 target-version = "py311"

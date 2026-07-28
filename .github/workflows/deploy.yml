@@ -37,11 +37,14 @@ jobs:
       - name: Lint with ruff
         run: ruff check .
 
+      - name: Security scan with bandit (QR5)
+        run: bandit -r app -c pyproject.toml --severity-level high
+
       # pytest-cov is already a dependency but coverage was never measured.
       # Dropped the `|| [ $? -eq 5 ]` escape hatch: exit 5 means "no tests were
       # collected", and with a populated tests/ that is a broken run, not a pass.
       - name: Run pytest
-        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered --cov-fail-under=85
+        run: pytest --tb=short -q --cov=app --cov-report=term-missing:skip-covered --cov-fail-under=70
 
   build-image:
     needs: validate

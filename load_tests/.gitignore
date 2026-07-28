@@ -1,0 +1,6 @@
+# Local config with real credentials — never commit.
+.env
+
+# Per-run artifacts.
+report.html
+__pycache__/
