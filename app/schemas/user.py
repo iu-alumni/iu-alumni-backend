@@ -7,7 +7,10 @@ class Alumni(BaseModel):
     hashed_password: str | None = None
     first_name: str
     last_name: str
-    graduation_year: str
+    # None for Alumni Friends (staff / dropouts / other non-graduates
+    # per FR22). Regular alumni still carry a year string.
+    graduation_year: str | None = None
+    role: str = "alumni"
     location: str | None = None
     biography: str | None = None
     avatar: str | None = None
@@ -26,7 +29,8 @@ class AlumniListItem(BaseModel):
     email: str
     first_name: str
     last_name: str
-    graduation_year: str
+    graduation_year: str | None = None
+    role: str = "alumni"
     location: str | None = None
     biography: str | None = None
     telegram_alias: str | None = None
