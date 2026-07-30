@@ -1,6 +1,6 @@
 import re
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -44,11 +44,26 @@ class AdminCreateRequest(BaseModel):
 class RegisterRequest(BaseModel):
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
-    graduation_year: str
+    # Alumni Friends (staff / dropouts / other non-graduates) skip the
+    # graduation year — the role field decides which is required.
+    graduation_year: str | None = None
+    role: str = Field(default="alumni", pattern="^(alumni|alumni_friend)$")
     email: EmailStr
     telegram_alias: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
     manual_verification: bool = False
+
+    @model_validator(mode="after")
+    def validate_grad_year_matches_role(self):
+        if self.role == "alumni_friend":
+            # The field is meaningless for friends — null it regardless
+            # of what the client sent so the row stays consistent.
+            self.graduation_year = None
+        elif self.role == "alumni" and (
+            self.graduation_year is None or not self.graduation_year.strip()
+        ):
+            raise ValueError("graduation_year is required for role='alumni'")
+        return self
 
     @field_validator("email")
     def validate_innopolis_email(cls, v):
@@ -75,6 +90,10 @@ class VerifyEmailRequest(BaseModel):
 
 class AdminVerifyRequest(BaseModel):
     email: EmailStr
+    # Optional role override applied on verification. Handy when the user
+    # registered as 'alumni' by mistake and the admin sees during review
+    # that they should be 'alumni_friend' (or vice versa).
+    role: str | None = Field(default=None, pattern="^(alumni|alumni_friend)$")
 
 
 class ResendVerificationRequest(BaseModel):

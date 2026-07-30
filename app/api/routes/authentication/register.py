@@ -55,6 +55,7 @@ async def register(
         first_name=request.first_name,
         last_name=request.last_name,
         graduation_year=request.graduation_year,
+        role=request.role,
         telegram_alias=request.telegram_alias,
         is_verified=False,
         is_banned=False,

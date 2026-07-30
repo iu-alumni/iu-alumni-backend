@@ -58,7 +58,10 @@ async def update_profile(
             profile_data.last_name, "Last name"
         )
 
-    if profile_data.graduation_year is not None:
+    # Alumni Friends have no graduation year — ignore attempts to set
+    # one on their profile so the record stays consistent with the role.
+    # Regular alumni can update it freely.
+    if profile_data.graduation_year is not None and current_user.role != "alumni_friend":
         current_user.graduation_year = profile_data.graduation_year
 
     if profile_data.location is not None:
