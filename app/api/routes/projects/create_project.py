@@ -39,7 +39,7 @@ async def create_project(
             detail="Description is required",
         )
 
-    donation_link = body.donation_link.strip() if body.donation_link else None
+    donation_link = str(body.donation_link) if body.donation_link else None
     goal_amount = body.goal_amount
     # Both fields are mandatory: every project is a fundraiser in v1,
     # so we need somewhere for the money to go and a target to fill.

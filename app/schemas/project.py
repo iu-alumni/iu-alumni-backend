@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 
 class CreateProjectRequest(BaseModel):
     title: str
     description: str
     cover: str | None = None
-    donation_link: str | None = None
+    donation_link: AnyHttpUrl | None = None
     goal_amount: int | None = None
 
 
@@ -15,7 +15,7 @@ class UpdateProjectRequest(BaseModel):
     title: str | None = None
     description: str | None = None
     cover: str | None = None
-    donation_link: str | None = None
+    donation_link: AnyHttpUrl | None = None
     goal_amount: int | None = None
 
 

@@ -59,9 +59,7 @@ async def update_project(
             project.cover = new_cover
             changed_content = True
     if body.donation_link is not None:
-        # Empty string clears the link; anything else that differs from
-        # the stored value counts as an edit for the re-review gate.
-        new_link = body.donation_link.strip() or None
+        new_link = str(body.donation_link)
         if new_link != project.donation_link:
             project.donation_link = new_link
             changed_content = True

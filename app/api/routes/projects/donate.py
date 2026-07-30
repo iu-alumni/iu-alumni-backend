@@ -35,7 +35,15 @@ async def donate(
             detail="Admins cannot donate to projects",
         )
 
-    project = db.query(Project).filter(Project.id == project_id).first()
+    # Lock the row until commit so concurrent donations cannot read the same
+    # total and overwrite one another. The contributor update belongs to the
+    # same transaction and is protected by the same lock.
+    project = (
+        db.query(Project)
+        .filter(Project.id == project_id)
+        .with_for_update()
+        .first()
+    )
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
