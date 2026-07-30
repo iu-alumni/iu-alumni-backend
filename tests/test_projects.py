@@ -11,6 +11,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException
+from pydantic import ValidationError
 import pytest
 
 from app.api.routes.admin.list_all_projects import admin_list_projects
@@ -22,6 +23,7 @@ from app.api.routes.admin.projects_approve import (
 from app.api.routes.projects.contribute import contribute, retract_contribution
 from app.api.routes.projects.create_project import create_project
 from app.api.routes.projects.delete_project import delete_project
+from app.api.routes.projects.donate import donate
 from app.api.routes.projects.get_project import get_project
 from app.api.routes.projects.list_contributed_projects import (
     list_my_contributed_projects,
@@ -32,7 +34,11 @@ from app.api.routes.projects.list_projects import list_projects
 from app.api.routes.projects.update_project import update_project
 from app.models.projects import Project
 from app.models.users import Admin, Alumni
-from app.schemas.project import CreateProjectRequest, UpdateProjectRequest
+from app.schemas.project import (
+    CreateProjectRequest,
+    DonateRequest,
+    UpdateProjectRequest,
+)
 
 
 def _alumni(user_id: str) -> Alumni:
@@ -62,6 +68,8 @@ def _seed_project(
     title: str = "Alumni Lounge",
     description: str = "Furnishing the new on-campus alumni lounge.",
     contributors: list[str] | None = None,
+    donation_link: str = "https://tinkoff.ru/rm/example",
+    goal_amount: int = 100000,
 ) -> Project:
     project = Project(
         id="p-" + uuid.uuid4().hex[:8],
@@ -71,6 +79,9 @@ def _seed_project(
         description=description,
         cover=None,
         approved=approved,
+        donation_link=donation_link,
+        goal_amount=goal_amount,
+        raised_amount=0,
     )
     db.add(project)
     db.commit()
@@ -89,7 +100,10 @@ class TestCreateProject:
 
         res = await create_project(
             body=CreateProjectRequest(
-                title="Campus Greenhouse", description="Year-round greenhouse."
+                title="Campus Greenhouse",
+                description="Year-round greenhouse.",
+                donation_link="https://tinkoff.ru/rm/greenhouse",
+                goal_amount=500000,
             ),
             db=db_session,
             current_user=alice,
@@ -99,6 +113,24 @@ class TestCreateProject:
         assert stored.owner_id == alice.id
         assert stored.approved is None
         assert stored.contributors_ids == []
+
+    @pytest.mark.parametrize(
+        "donation_link",
+        [
+            "javascript:alert(1)",
+            "data:text/html,<script>alert(1)</script>",
+            "ftp://example.com/donate",
+            "not-a-url",
+        ],
+    )
+    def test_rejects_non_http_donation_links(self, donation_link):
+        with pytest.raises(ValidationError, match="donation_link"):
+            CreateProjectRequest(
+                title="Campus Greenhouse",
+                description="Year-round greenhouse.",
+                donation_link=donation_link,
+                goal_amount=500000,
+            )
 
     @pytest.mark.asyncio
     async def test_admin_cannot_create(self, db_session):
@@ -365,6 +397,94 @@ class TestContribute:
                 project_id=p.id, db=db_session, current_user=bob
             )
         assert exc.value.status_code == 400
+
+
+class TestDonate:
+    @pytest.mark.asyncio
+    async def test_donation_increments_total_and_adds_contributor(
+        self, db_session
+    ):
+        alice, bob = _alumni("alice"), _alumni("bob")
+        db_session.add_all([alice, bob])
+        db_session.commit()
+        project = _seed_project(
+            db_session,
+            owner_id=alice.id,
+            approved=True,
+        )
+
+        result = await donate(
+            project_id=project.id,
+            body=DonateRequest(amount=500),
+            db=db_session,
+            current_user=bob,
+        )
+
+        assert result.raised_amount == 500
+        assert result.contributors_ids == [bob.id]
+
+    @pytest.mark.asyncio
+    async def test_repeat_donation_accumulates_without_duplicate_contributor(
+        self, db_session
+    ):
+        alice, bob = _alumni("alice"), _alumni("bob")
+        db_session.add_all([alice, bob])
+        db_session.commit()
+        project = _seed_project(
+            db_session,
+            owner_id=alice.id,
+            approved=True,
+            contributors=[bob.id],
+        )
+
+        await donate(
+            project_id=project.id,
+            body=DonateRequest(amount=500),
+            db=db_session,
+            current_user=bob,
+        )
+        result = await donate(
+            project_id=project.id,
+            body=DonateRequest(amount=750),
+            db=db_session,
+            current_user=bob,
+        )
+
+        assert result.raised_amount == 1250
+        assert result.contributors_ids == [bob.id]
+
+    @pytest.mark.asyncio
+    async def test_pending_project_rejected(self, db_session):
+        alice, bob = _alumni("alice"), _alumni("bob")
+        db_session.add_all([alice, bob])
+        db_session.commit()
+        project = _seed_project(
+            db_session,
+            owner_id=alice.id,
+            approved=None,
+        )
+
+        with pytest.raises(HTTPException) as exc:
+            await donate(
+                project_id=project.id,
+                body=DonateRequest(amount=500),
+                db=db_session,
+                current_user=bob,
+            )
+
+        assert exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_admin_rejected(self, db_session):
+        with pytest.raises(HTTPException) as exc:
+            await donate(
+                project_id="any-project",
+                body=DonateRequest(amount=500),
+                db=db_session,
+                current_user=_admin(),
+            )
+
+        assert exc.value.status_code == 403
 
 
 class TestContributedListers:

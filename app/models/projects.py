@@ -1,5 +1,6 @@
 from sqlalchemy import (
     ARRAY,
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -36,6 +37,19 @@ class Project(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
     cover = Column(String, nullable=True)
+    # Optional payment link (bank / Tinkoff / YooKassa / etc.). Free-text
+    # so we don't tie ourselves to a specific provider — the client just
+    # opens whatever URL the owner supplies.
+    donation_link = Column(String, nullable=True)
+    # Fundraising goal in whole rubles. Owner sets on create/edit; may
+    # be left NULL for "no explicit goal, just gathering support".
+    goal_amount = Column(BigInteger, nullable=True)
+    # Total raised so far, in whole rubles. Every self-reported donation
+    # adds to this. No real payment integration in v1 — donors enter the
+    # amount they gave after returning from the donation URL.
+    raised_amount = Column(
+        BigInteger, nullable=False, default=0, server_default="0"
+    )
     approved = Column(Boolean, nullable=True, default=None, index=True)
     created_at = Column(
         DateTime, nullable=False, server_default=func.now()
