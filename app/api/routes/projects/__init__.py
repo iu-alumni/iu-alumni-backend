@@ -4,6 +4,7 @@ from app.api.routes.projects import (
     contribute,
     create_project,
     delete_project,
+    donate,
     get_cover,
     get_project,
     list_contributed_projects,
@@ -25,3 +26,4 @@ router.include_router(get_project.router)
 router.include_router(update_project.router)
 router.include_router(delete_project.router)
 router.include_router(contribute.router)
+router.include_router(donate.router)

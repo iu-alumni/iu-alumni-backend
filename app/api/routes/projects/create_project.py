@@ -39,6 +39,20 @@ async def create_project(
             detail="Description is required",
         )
 
+    donation_link = str(body.donation_link) if body.donation_link else None
+    goal_amount = body.goal_amount
+    # Both fields are mandatory: every project is a fundraiser in v1,
+    # so we need somewhere for the money to go and a target to fill.
+    if not donation_link:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Donation link is required",
+        )
+    if goal_amount is None or goal_amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Fundraising goal is required and must be positive",
+        )
     project = Project(
         id=get_random_token(),
         owner_id=current_user.id,
@@ -46,6 +60,9 @@ async def create_project(
         title=body.title.strip(),
         description=body.description.strip(),
         cover=body.cover,
+        donation_link=donation_link,
+        goal_amount=goal_amount,
+        raised_amount=0,
         approved=None,
     )
     db.add(project)

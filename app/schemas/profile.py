@@ -17,7 +17,11 @@ class ProfileResponse(BaseModel):
     id: str
     first_name: str
     last_name: str
-    graduation_year: str
+    # None for Alumni Friends (staff / dropouts / other non-graduate
+    # community members). Clients render an "Alumni Friend" chip in
+    # place of the graduation-year tag when role == 'alumni_friend'.
+    graduation_year: str | None = None
+    role: str = "alumni"
     location: str | None = None
     biography: str | None = None
     show_location: bool = False
@@ -38,7 +42,8 @@ class ProfileListItem(BaseModel):
     id: str
     first_name: str
     last_name: str
-    graduation_year: str
+    graduation_year: str | None = None
+    role: str = "alumni"
     location: str | None = None
     biography: str | None = None
     show_location: bool = False

@@ -58,6 +58,36 @@ async def update_project(
         if new_cover != project.cover:
             project.cover = new_cover
             changed_content = True
+    if body.donation_link is not None:
+        new_link = str(body.donation_link)
+        if new_link != project.donation_link:
+            project.donation_link = new_link
+            changed_content = True
+    if body.goal_amount is not None:
+        if body.goal_amount < 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Goal amount must be zero or positive",
+            )
+        # 0 clears the goal (owner deciding to drop the target); anything
+        # else that differs counts as an edit for the re-review gate.
+        new_goal = body.goal_amount if body.goal_amount > 0 else None
+        if new_goal != project.goal_amount:
+            project.goal_amount = new_goal
+            changed_content = True
+
+    # Both fields are mandatory in v1 — every project is a fundraiser,
+    # so the row can never end up without a target or without a link.
+    if not project.donation_link:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Donation link is required",
+        )
+    if project.goal_amount is None or project.goal_amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Fundraising goal is required and must be positive",
+        )
 
     # If the owner touched any content, an approved project goes back to
     # pending so the change goes through admin review again.

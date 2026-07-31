@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Table
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, String, Table
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -7,9 +7,29 @@ from app.core.database import Base
 alumni_follows = Table(
     "alumni_follows",
     Base.metadata,
-    Column("follower_id", String, ForeignKey("alumni.id", ondelete="CASCADE"), primary_key=True, nullable=False, index=True),
-    Column("followed_id", String, ForeignKey("alumni.id", ondelete="CASCADE"), primary_key=True, nullable=False, index=True),
+    Column(
+        "follower_id",
+        String,
+        ForeignKey("alumni.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+        index=True,
+    ),
+    Column(
+        "followed_id",
+        String,
+        ForeignKey("alumni.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+        index=True,
+    ),
 )
+
+# Kept in one place so the schema layer, the mobile app, and the admin
+# portal all agree on the wire format.
+ALUMNI_ROLE_ALUMNI = "alumni"
+ALUMNI_ROLE_FRIEND = "alumni_friend"
+ALUMNI_ROLES = (ALUMNI_ROLE_ALUMNI, ALUMNI_ROLE_FRIEND)
 
 
 class Alumni(Base):
@@ -20,7 +40,16 @@ class Alumni(Base):
     hashed_password = Column(String)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
-    graduation_year = Column(String, nullable=False)
+    # NULL for Alumni Friends (staff / dropouts / other non-graduates).
+    graduation_year = Column(String, nullable=True)
+    # 'alumni' by default. Alumni Friends can't set graduation_year and
+    # render a chip instead of the year tag on their profile.
+    role = Column(
+        Enum(*ALUMNI_ROLES, name="alumni_role"),
+        nullable=False,
+        default=ALUMNI_ROLE_ALUMNI,
+        server_default=ALUMNI_ROLE_ALUMNI,
+    )
     location = Column(String)
     biography = Column(String)
     show_location = Column(Boolean, default=False)
