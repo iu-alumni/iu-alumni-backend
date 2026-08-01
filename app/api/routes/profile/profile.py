@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.routes.profile.utils import build_profile_response
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.users import Alumni
@@ -31,7 +32,7 @@ def get_profile(
         raise HTTPException(
             status_code=403, detail="Your account is not an alumni account"
         )
-    return current_user
+    return build_profile_response(current_user, current_user)
 
 
 @router.put("/me", response_model=ProfileResponse)
@@ -99,6 +100,7 @@ async def update_profile(
 
     if awarded_codes:
         from app.services.badge_notifications import notify_badge_awards
+
         await notify_badge_awards(db, current_user, awarded_codes)
 
-    return current_user
+    return build_profile_response(current_user, current_user)

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.api.routes.profile.utils import build_profile_response
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.users import Admin, Alumni
@@ -43,7 +44,7 @@ def get_profile_by_id(
     user = db.query(Alumni).filter(Alumni.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return build_profile_response(user, current_user)
 
 
 @router.get("/", response_model=list[ProfileResponse])
@@ -58,4 +59,4 @@ def get_profiles_by_ids(
     users = db.query(Alumni).filter(Alumni.id.in_(user_ids)).all()
     if not users:
         raise HTTPException(status_code=404, detail="Users not found")
-    return users
+    return [build_profile_response(user, current_user) for user in users]
