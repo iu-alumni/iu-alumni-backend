@@ -24,7 +24,12 @@ class Event(BaseModel):
 
 
 class EventListItem(BaseModel):
-    """Slim event schema for list responses — includes cover image."""
+    """Slim event schema for list responses.
+
+    Covers are intentionally omitted because embedding base64 images made a
+    single page several megabytes large. Clients load them from the dedicated
+    ``GET /events/{event_id}/cover`` endpoint instead.
+    """
 
     id: str
     owner_id: str
@@ -35,14 +40,11 @@ class EventListItem(BaseModel):
     datetime: datetime
     cost: float
     is_online: bool
-    cover: str | None = None
     approved: bool | None = None
 
 
 class AdminEventListItem(EventListItem):
-    """Admin event list item — includes cover for thumbnail display."""
-
-    cover: str | None = None
+    """Admin event list item; covers are loaded separately."""
 
 
 class CreateEventRequest(BaseModel):

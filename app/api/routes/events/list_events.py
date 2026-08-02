@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -27,7 +27,7 @@ async def list_events(
     current_user: Alumni | Admin = Depends(get_current_user),
 ):
     """List all approved events with optional title search and cursor-based pagination."""
-    query = db.query(Event).filter(Event.approved == True)
+    query = db.query(Event).options(defer(Event.cover)).filter(Event.approved == True)
 
     if search:
         query = query.filter(Event.title.ilike(f"%{search}%"))
