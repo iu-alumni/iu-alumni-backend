@@ -9,7 +9,12 @@ from app.schemas.auth import (
     PasswordResetConfirmSchema,
     RegisterRequest,
 )
-from app.schemas.event import CreateEventRequest, UpdateEventRequest
+from app.schemas.event import (
+    AdminEventListItem,
+    CreateEventRequest,
+    EventListItem,
+    UpdateEventRequest,
+)
 
 
 class TestAuthSchemas:
@@ -321,6 +326,23 @@ class TestAuthSchemas:
 
 class TestEventSchemas:
     """Test cases for event schemas."""
+
+    @pytest.mark.parametrize("schema", [EventListItem, AdminEventListItem])
+    def test_event_lists_do_not_embed_base64_covers(self, schema):
+        item = schema(
+            id="event-1",
+            owner_id="owner-1",
+            participants_ids=[],
+            title="Meetup",
+            description="Description",
+            location="Innopolis",
+            datetime="2026-08-01T12:00:00",
+            cost=0,
+            is_online=False,
+            approved=True,
+        )
+
+        assert "cover" not in item.model_dump()
 
     def test_create_event_rejects_blank_required_text(self):
         """Test CreateEventRequest rejects whitespace-only text fields."""

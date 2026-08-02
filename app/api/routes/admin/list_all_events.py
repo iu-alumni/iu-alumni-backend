@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -32,7 +32,7 @@ async def list_events(
             status_code=403, detail="You are not authorized to access this resource"
         )
 
-    query = db.query(Event)
+    query = db.query(Event).options(defer(Event.cover))
 
     if search:
         query = query.filter(Event.title.ilike(f"%{search}%"))
